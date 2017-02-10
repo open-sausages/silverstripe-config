@@ -7,29 +7,43 @@ use micmania1\config\ConfigCollection;
 
 class Priority
 {
-    public function merge(array $mine, ConfigCollectionInterface $theirs) {
+    /**
+     * Merges an array of values into a collection
+     *
+     * @param array $mine Map of key to array with value and metadata sub-keys
+     * @param ConfigCollectionInterface $theirs
+     * @return ConfigCollectionInterface
+     */
+    public function merge(array $mine, ConfigCollectionInterface $theirs)
+    {
         foreach ($mine as $key => $item) {
-
             // Ensure we have value/metadata keys
             $item = $this->normaliseItem($item);
+            $value = $item['value'];
+            $metadata = $item['metadata'];
 
             // If the item doesn't exist in theirs, we can just set it and continue.
-            $theirValue = $theirs->get($key);
-            if(is_null($theirValue)) {
-                $theirs->set($key, $item['value']);
+            if (!$theirs->exists($key)) {
+                $theirs->set($key, $value, $metadata);
                 continue;
             }
 
             // Get the two values for comparison
-            $value = $item['value'];
+            $theirValue = $theirs->get($key);
 
             // If its an array and the key already esists, we can use array_merge
             if (is_array($value) && is_array($theirValue)) {
                 $value = $this->mergeArray($value, $theirValue);
             }
 
-            // The key is not set or the value is to be overwritten
-            $theirs->set($key, $value, $item['metadata']);
+            // Preserve metadata
+            if (!$metadata) {
+                $theirMetadata = $theirs->getMetadata();
+                if (isset($theirMetadata[$key])) {
+                    $metadata = $theirMetadata[$key];
+                }
+            }
+            $theirs->set($key, $value, $metadata);
         }
 
         return $theirs;
@@ -47,10 +61,10 @@ class Priority
      */
     public function mergeArray(array $highPriority, array $lowPriority)
     {
-        foreach($highPriority as $key => $value) {
+        foreach ($highPriority as $key => $value) {
             // If value isn't an array, we can overwrite whatever was before it
-            if(!is_array($value)) {
-                if(is_int($key)) {
+            if (!is_array($value)) {
+                if (is_int($key)) {
                     $lowPriority[] = $value;
                 } else {
                     $lowPriority[$key] = $value;
@@ -60,8 +74,8 @@ class Priority
             }
 
             // If not set, or we're changing type we can set low priority
-            if(!isset($lowPriority[$key]) || !is_array($lowPriority[$key])) {
-                if(is_int($key)) {
+            if (!isset($lowPriority[$key]) || !is_array($lowPriority[$key])) {
+                if (is_int($key)) {
                     $lowPriority[] = $value;
                 } else {
                     $lowPriority[$key] = $value;
@@ -86,11 +100,11 @@ class Priority
      */
     protected function normaliseItem(array $item)
     {
-        if(!isset($item['value'])) {
+        if (!isset($item['value'])) {
             $item['value'] = '';
         }
 
-        if(!isset($item['metadata'])) {
+        if (!isset($item['metadata'])) {
             $item['metadata'] = [];
         }
 

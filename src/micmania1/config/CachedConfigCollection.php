@@ -10,12 +10,7 @@ class CachedConfigCollection implements ConfigCollectionInterface
     /**
      * @const string
      */
-    const METADATA_KEY = '__METADATA__';
-
-    /**
-     * @const string
-     */
-    const HISTORY_KEY = '__HISTORY__';
+    const CACHE_KEY = '__CONFIG__';
 
     /**
      * @var CacheItemPoolInterface
@@ -23,53 +18,44 @@ class CachedConfigCollection implements ConfigCollectionInterface
     protected $pool;
 
     /**
-     * @var boolean
+     * @var ConfigCollectionInterface
      */
-    protected $trackMetadata = false;
+    protected $collection;
 
     /**
-     * @param boolean $trackMetadata
-     * @param CacheItemPoolInterface $pool
+     * @var callable
      */
-    public function __construct(CacheItemPoolInterface $pool, $trackMetadata = false)
+    protected $collectionCreator;
+
+    /**
+     * @var bool
+     */
+    protected $flush = false;
+
+    /**
+     * Set to true if cached item is dirty and marked for deferred write
+     *
+     * @var bool
+     */
+    protected $dirty = false;
+
+    /**
+     * Provides a cached interface over the top of a core config
+     *
+     * @param CacheItemPoolInterface $pool
+     * @param callable $collectionCreator Factory to generate cached collection
+     * @param bool $flush Set to true to force the cache to regenerate
+     */
+    public function __construct(CacheItemPoolInterface $pool, $collectionCreator, $flush = false)
     {
         $this->pool = $pool;
-        $this->trackMetadata = (bool) $trackMetadata;
+        $this->collectionCreator = $collectionCreator;
+        $this->flush = $flush;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function set($key, $value, $metadata = [])
     {
-        $cacheKey = $this->normaliseKey($key);
-
-        // We use null as the key to return an empty cache item
-        $cacheItem = $this->pool->getItem($cacheKey);
-
-        if($this->trackMetadata) {
-            $cachedMetadata = $this->getMetadata();
-            $cachedHistory = $this->getHistory();
-
-            if($this->exists($key) && isset($cachedMetadata[$key])) {
-                if(!isset($cachedHistory[$key])) {
-                    $cachedHistory[$key] = [];
-                }
-                array_unshift($cachedHistory[$key], [
-                    'value' => $value,
-                    'metadata' => $metadata,
-                ]);
-            }
-
-            $cachedMetadata[$key] = $metadata;
-
-            $this->saveMetadata($cachedMetadata);
-            $this->saveHistory($cachedHistory);
-        }
-
-        // Save our new value
-        $cacheItem->set($value);
-        $this->pool->saveDeferred($cacheItem);
+        return $this->collection->set($key, $value, $metadata);
     }
 
     /**
@@ -77,9 +63,7 @@ class CachedConfigCollection implements ConfigCollectionInterface
      */
     public function get($key)
     {
-        $key = $this->normaliseKey($key);
-
-        return $this->pool->getItem($key)->get();
+        return $this->getCollection()->get($key);
     }
 
     /**
@@ -87,34 +71,22 @@ class CachedConfigCollection implements ConfigCollectionInterface
      */
     public function exists($key)
     {
-        $key = $this->normaliseKey($key);
-
-        return $this->pool->hasItem($key);
+        return $this->getCollection()->exists($key);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function delete($key)
     {
-        $key = $this->normaliseKey($key);
-        $this->pool->deleteItem($key);
+        return $this->getCollection()->delete($key);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function deleteAll()
     {
-        $this->pool->clear();
+        $this->getCollection()->deleteAll();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getMetadata()
     {
-        return $this->getTrackingData(self::METADATA_KEY);
+        return $this->getCollection()->getMetadata();
     }
 
     /**
@@ -122,53 +94,50 @@ class CachedConfigCollection implements ConfigCollectionInterface
      */
     public function getHistory()
     {
-        return $this->getTrackingData(self::HISTORY_KEY);
+        return $this->getCollection()->getHistory();
     }
 
     /**
-     * A shortcut for tracking data (metadata and history). This will
-     * always return an array, even if we're not tracking.
+     * Get or build collection
      *
-     * @param string $key
-     *
-     * @return array
+     * @return ConfigCollectionInterface
      */
-    private function getTrackingData($key)
+    public function getCollection()
     {
-        if (!$this->trackMetadata) {
-            return [];
+        // Get current collection
+        if ($this->collection) {
+            return $this->collection;
         }
 
-        $key = $this->normaliseKey($key);
-        $value = $this->pool->getItem($key)->get();
+        // Init cached item
+        $cacheItem = $this->pool->getItem(self::CACHE_KEY);
 
-        return is_array($value) ? $value : [];
+        // Load from cache (unless flushing)
+        if (!$this->flush && $cacheItem->isHit()) {
+            $this->collection = $cacheItem->get();
+            return $this->collection;
+    }
+
+        // Cache missed
+        $this->collection = call_user_func($this->collectionCreator);
+
+        // Note: We re-cache the cloned item, so that local modifications aren't cached
+        $cacheItem->set(clone $this->collection);
+
+        // Defer this save
+        $this->dirty = true;
+        $this->pool->saveDeferred($cacheItem);
+        return $this->collection;
     }
 
     /**
-     * Saves the metadata to cache
-     *
-     * @param array $metadata
+     * @param ConfigCollectionInterface $collection
+     * @return $this
      */
-    protected function saveMetadata($metadata)
+    public function setCollection($collection)
     {
-        $cached = $this->pool->getItem(self::METADATA_KEY);
-        $cached->set($metadata);
-
-        $this->pool->saveDeferred($cached);
-    }
-
-    /**
-     * Saves the history to the cache
-     *
-     * @param array $history
-     */
-    protected function saveHistory($history)
-    {
-        $cached = $this->pool->getItem(self::HISTORY_KEY);
-        $cached->set($history);
-
-        $this->pool->saveDeferred($cached);
+        $this->collection = $collection;
+        return $this;
     }
 
     /**
@@ -190,6 +159,13 @@ class CachedConfigCollection implements ConfigCollectionInterface
      */
     public function __destruct()
     {
+        if ($this->dirty) {
         $this->pool->commit();
+    }
+}
+
+    public function getNest()
+    {
+        return $this->getCollection()->getNest();
     }
 }

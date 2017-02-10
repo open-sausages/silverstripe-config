@@ -17,11 +17,11 @@ interface ConfigCollectionInterface
     public function set($key, $value, $metadata = []);
 
     /**
-     * Fetches value and metadata for everything we have set
+     * Fetches value
      *
      * @param string $key
      *
-     * @return ConfigItemInterface|null
+     * @return mixed
      */
     public function get($key);
 
@@ -59,4 +59,12 @@ interface ConfigCollectionInterface
      * @return array
      */
     public function getHistory();
+
+    /**
+     * Get nested version of this config,
+     * which is a duplicated version of this config.
+     *
+     * @return mixed
+     */
+    public function getNest();
 }

@@ -2,9 +2,11 @@
 
 namespace micmania1\config;
 
-class ConfigCollection implements ConfigCollectionInterface
-{
+use micmania1\config\Transformer\TransformerInterface;
+use Serializable;
 
+class ConfigCollection implements ConfigCollectionInterface, Serializable
+{
     /**
      * Stores a list of key/value config.
      *
@@ -23,13 +25,36 @@ class ConfigCollection implements ConfigCollectionInterface
     protected $history = [];
 
     /**
+     * @var TransformerInterface[]
+     */
+    protected $transformers = [];
+
+    /**
      * @var boolean
      */
     protected $trackMetadata = false;
 
-    public function __construct($trackMetadata = false)
+    /**
+     * ConfigCollection constructor.
+     *
+     * @param TransformerInterface[] $transformers
+     * @param bool $trackMetadata
+     */
+    public function __construct($transformers = [], $trackMetadata = false)
     {
+        $this->transformers = $transformers;
         $this->trackMetadata = $trackMetadata;
+        $this->transform();
+    }
+
+    /**
+     * Trigger transformers to load into this store
+     */
+    protected function transform()
+    {
+        foreach ($this->transformers as $transformer) {
+            $transformer->transform($this);
+        }
     }
 
     /**
@@ -56,9 +81,6 @@ class ConfigCollection implements ConfigCollectionInterface
         $this->config[$key] = $value;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function get($key)
     {
         $key = strtolower($key);
@@ -75,7 +97,7 @@ class ConfigCollection implements ConfigCollectionInterface
     public function exists($key)
     {
         $key = strtolower($key);
-        return isset($this->config[$key]);
+        return array_key_exists($key, $this->config);
     }
 
     /**
@@ -83,11 +105,9 @@ class ConfigCollection implements ConfigCollectionInterface
      */
     public function delete($key)
     {
-        $key = strtolower($key);
-        if($this->exists($key)) {
+		$key = strtolower($key);
             unset($this->config[$key]);
         }
-    }
 
     /**
      * {@inheritdoc}
@@ -121,5 +141,53 @@ class ConfigCollection implements ConfigCollectionInterface
         }
 
         return $this->history;
+    }
+
+    /**
+     * String representation of object
+     * @link http://php.net/manual/en/serializable.serialize.php
+     * @return string the string representation of the object or null
+     * @since 5.1.0
+     */
+    public function serialize()
+    {
+        // Note: No transformers are serialized because we don't need them
+        return json_encode([
+            $this->config,
+            $this->history,
+            $this->metadata,
+            $this->trackMetadata
+        ]);
+    }
+
+    /**
+     * Constructs the object
+     * @link http://php.net/manual/en/serializable.unserialize.php
+     * @param string $serialized <p>
+     * The string representation of the object.
+     * </p>
+     * @return void
+     * @since 5.1.0
+     */
+    public function unserialize($serialized)
+    {
+        list(
+            $this->config,
+            $this->history,
+            $this->metadata,
+            $this->trackMetadata
+        ) = json_decode($serialized, true);
+    }
+
+    public function __clone()
+    {
+        // Transformers are only required on original object
+        $this->transformers = [];
+    }
+
+    public function getNest()
+    {
+        $nested = clone $this;
+        return $nested;
     }
 }

@@ -185,7 +185,7 @@ class ConfigCollection implements ConfigCollectionInterface, Serializable
         $this->transformers = [];
     }
 
-    public function getNest()
+    public function nest()
     {
         $nested = clone $this;
         return $nested;

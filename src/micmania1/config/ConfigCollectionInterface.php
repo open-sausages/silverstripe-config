@@ -66,5 +66,5 @@ interface ConfigCollectionInterface
      *
      * @return mixed
      */
-    public function getNest();
+    public function nest();
 }

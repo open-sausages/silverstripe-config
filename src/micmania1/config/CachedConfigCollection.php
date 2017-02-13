@@ -121,8 +121,9 @@ class CachedConfigCollection implements ConfigCollectionInterface
         // Cache missed
         $this->collection = call_user_func($this->collectionCreator);
 
-        // Note: We re-cache the cloned item, so that local modifications aren't cached
-        $cacheItem->set(clone $this->collection);
+        // Note: Config may be yet modified prior to deferred save, but after Core.php
+        // however no formal api for this yet
+        $cacheItem->set($this->collection);
 
         // Defer this save
         $this->dirty = true;
@@ -164,8 +165,8 @@ class CachedConfigCollection implements ConfigCollectionInterface
     }
 }
 
-    public function getNest()
+    public function nest()
     {
-        return $this->getCollection()->getNest();
+        return $this->getCollection()->nest();
     }
 }

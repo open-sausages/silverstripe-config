@@ -1,6 +1,6 @@
 <?php
 
-namespace micmania1\config;
+namespace micmania1\config\Collections;
 
 use micmania1\config\Middleware\Middleware;
 use micmania1\config\Middleware\MiddlewareAware;
@@ -97,6 +97,11 @@ class CachedConfigCollection implements ConfigCollectionInterface
         return $config;
     }
 
+    public function getAll()
+    {
+        return $this->getCollection()->getAll();
+    }
+
     public function exists($class, $name = null)
     {
         $config = $this->get($class);
@@ -179,11 +184,12 @@ class CachedConfigCollection implements ConfigCollectionInterface
 
     public function nest()
     {
-        // When nesting it's necessary to provide a middleware-disabled copy of the internal
-        // store with a list of useful middlewares
-        return $this
-            ->getCollection()
-            ->nest()
+        // Create locally-modifiable collection which points back to
+        // this self-reference.
+        // This allows un-modified clases to continue to benefit from
+        // any caches provided by CachedConfigCollection
+        return DeltaConfigCollection::create()
+            ->setParent($this)
             ->setMiddlewares($this->nestedMiddlewares);
     }
 

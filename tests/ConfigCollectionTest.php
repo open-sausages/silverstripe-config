@@ -1,6 +1,6 @@
 <?php
 
-use micmania1\config\ConfigCollection;
+use micmania1\config\Collections\ConfigCollection;
 use PHPUnit\Framework\TestCase;
 
 class ConfigCollectionTest extends TestCase

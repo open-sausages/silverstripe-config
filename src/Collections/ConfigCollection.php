@@ -1,6 +1,6 @@
 <?php
 
-namespace micmania1\config;
+namespace micmania1\config\Collections;
 
 use BadMethodCallException;
 use micmania1\config\MergeStrategy\Priority;
@@ -21,13 +21,6 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
      * @var array
      */
     protected $config = [];
-
-    /**
-     * Cache of middleware-applied config
-     *
-     * @var array
-     */
-    protected $configMiddleware = [];
 
     /**
      * @var array
@@ -55,12 +48,11 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
     }
 
     /**
-     * @param bool $trackMetadata
      * @return static
      */
-    public static function create($trackMetadata = false)
+    public static function create()
     {
-        return new static($trackMetadata);
+        return new static();
     }
 
     /**
@@ -103,30 +95,14 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
         } else {
             $this->config[$class] = $data;
         }
-        unset($this->configMiddleware[$class]);
         return $this;
     }
 
     public function get($class, $name = null, $includeMiddleware = true)
     {
+        // Get config for complete class
         $class = strtolower($class);
-        // Can't apply middleware to config on non-existant class
-        if (!isset($this->config[$class])) {
-            return null;
-        }
-
-        if ($includeMiddleware) {
-            if (array_key_exists($class, $this->configMiddleware)) {
-                $config = $this->configMiddleware[$class];
-            } else {
-                $config = $this->callMiddleware($class, function () use ($class) {
-                    return $this->config[$class];
-                });
-                $this->configMiddleware[$class] = $config;
-            }
-        } else {
-            $config = $this->config[$class];
-        }
+        $config = $this->getClassConfig($class, $includeMiddleware);
 
         // Return either name, or whole-class config
         if ($name) {
@@ -156,7 +132,6 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
         } else {
             unset($this->config[$class]);
         }
-        unset($this->configMiddleware[$class]);
         return $this;
     }
 
@@ -165,7 +140,16 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
         $this->config = [];
         $this->metadata = [];
         $this->history = [];
-        $this->configMiddleware = [];
+    }
+
+    /**
+     * Get complete config
+     *
+     * @return array
+     */
+    public function getAll()
+    {
+        return $this->config;
     }
 
     public function merge($class, $name, $value)
@@ -241,5 +225,28 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
     public function nest()
     {
         return clone $this;
+    }
+
+    /**
+     * @param string $class
+     * @param bool $includeMiddleware
+     * @return array|mixed
+     */
+    protected function getClassConfig($class, $includeMiddleware)
+    {
+        // Can't apply middleware to config on non-existant class
+        if (!isset($this->config[$class])) {
+            return null;
+        }
+
+        if ($includeMiddleware) {
+            $config = $this->callMiddleware($class, function () use ($class) {
+                return $this->config[$class];
+            });
+            return $config;
+        } else {
+            $config = $this->config[$class];
+            return $config;
+        }
     }
 }

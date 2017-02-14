@@ -2,7 +2,7 @@
 
 namespace micmania1\config\Transformer;
 
-use micmania1\config\MutableConfigCollectionInterface;
+use micmania1\config\Collections\MutableConfigCollectionInterface;
 use ReflectionClass;
 use ReflectionProperty;
 

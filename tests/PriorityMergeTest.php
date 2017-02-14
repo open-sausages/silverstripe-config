@@ -2,7 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 use micmania1\config\MergeStrategy\Priority;
-use micmania1\config\ConfigCollection;
+use micmania1\config\Collections\ConfigCollection;
 use Prophecy\Prophet;
 use Prophecy\Argument;
 

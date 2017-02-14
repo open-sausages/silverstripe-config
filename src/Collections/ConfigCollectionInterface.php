@@ -1,6 +1,6 @@
 <?php
 
-namespace micmania1\config;
+namespace micmania1\config\Collections;
 
 use micmania1\config\Middleware\Middleware;
 
@@ -48,7 +48,7 @@ interface ConfigCollectionInterface
      * Get nested version of this config,
      * which is a duplicated version of this config.
      *
-     * @return self
+     * @return static
      */
     public function nest();
 
@@ -68,4 +68,11 @@ interface ConfigCollectionInterface
      * @return $this
      */
     public function addMiddleware($middleware);
+
+    /**
+     * Get complete config (excludes middleware)
+     *
+     * @return array
+     */
+    public function getAll();
 }

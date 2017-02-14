@@ -1,6 +1,6 @@
 <?php
 
-namespace micmania1\config;
+namespace micmania1\config\Collections;
 
 interface MutableConfigCollectionInterface extends ConfigCollectionInterface
 {

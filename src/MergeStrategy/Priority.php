@@ -2,7 +2,7 @@
 
 namespace micmania1\config\MergeStrategy;
 
-use micmania1\config\MutableConfigCollectionInterface;
+use micmania1\config\Collections\MutableConfigCollectionInterface;
 
 class Priority
 {
@@ -10,7 +10,7 @@ class Priority
      * Merges an array of values into a collection
      *
      * @param array $mine Map of key to array with value and metadata sub-keys
-     * @param MutableConfigCollectionInterface $theirs
+     * @param \micmania1\config\Collections\MutableConfigCollectionInterface $theirs
      * @return MutableConfigCollectionInterface
      */
     public function merge(array $mine, MutableConfigCollectionInterface $theirs)

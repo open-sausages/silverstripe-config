@@ -13,7 +13,7 @@
     },
 	"autoload": {
 		"psr-4": {
-			"micmania1\\config\\": "src/micmania1/config"
+			"micmania1\\config\\": "src/"
 		}
 	}
 }

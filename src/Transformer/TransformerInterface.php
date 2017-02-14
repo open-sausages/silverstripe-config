@@ -2,7 +2,7 @@
 
 namespace micmania1\config\Transformer;
 
-use micmania1\config\MutableConfigCollectionInterface;
+use micmania1\config\Collections\MutableConfigCollectionInterface;
 
 interface TransformerInterface
 {
@@ -12,7 +12,7 @@ interface TransformerInterface
      * output into the final merged config.
      *
      * @param MutableConfigCollectionInterface $collection
-     * @return MutableConfigCollectionInterface
+     * @return \micmania1\config\Collections\MutableConfigCollectionInterface
      */
     public function transform(MutableConfigCollectionInterface $collection);
 }

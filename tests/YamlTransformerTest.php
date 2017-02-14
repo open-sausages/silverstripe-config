@@ -1,7 +1,7 @@
 <?php
 
 use micmania1\config\Transformer\YamlTransformer;
-use micmania1\config\ConfigCollection;
+use micmania1\config\Collections\ConfigCollection;
 use PHPUnit\Framework\TestCase;
 use org\bovigo\vfs\vfsStream;
 use Symfony\Component\Finder\Finder;

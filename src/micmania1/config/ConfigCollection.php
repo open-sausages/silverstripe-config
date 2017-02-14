@@ -2,17 +2,32 @@
 
 namespace micmania1\config;
 
+use BadMethodCallException;
+use micmania1\config\MergeStrategy\Priority;
+use micmania1\config\Middleware\MiddlewareAware;
 use micmania1\config\Transformer\TransformerInterface;
 use Serializable;
 
-class ConfigCollection implements ConfigCollectionInterface, Serializable
+/**
+ * Basic mutable config collection
+ */
+class ConfigCollection implements MutableConfigCollectionInterface, Serializable
 {
+    use MiddlewareAware;
+
     /**
      * Stores a list of key/value config.
      *
      * @var array
      */
     protected $config = [];
+
+    /**
+     * Cache of middleware-applied config
+     *
+     * @var array
+     */
+    protected $configMiddleware = [];
 
     /**
      * @var array
@@ -25,11 +40,6 @@ class ConfigCollection implements ConfigCollectionInterface, Serializable
     protected $history = [];
 
     /**
-     * @var TransformerInterface[]
-     */
-    protected $transformers = [];
-
-    /**
      * @var boolean
      */
     protected $trackMetadata = false;
@@ -37,86 +47,139 @@ class ConfigCollection implements ConfigCollectionInterface, Serializable
     /**
      * ConfigCollection constructor.
      *
-     * @param TransformerInterface[] $transformers
      * @param bool $trackMetadata
      */
-    public function __construct($transformers = [], $trackMetadata = false)
+    public function __construct($trackMetadata = false)
     {
-        $this->transformers = $transformers;
         $this->trackMetadata = $trackMetadata;
-        $this->transform();
+    }
+
+    /**
+     * @param bool $trackMetadata
+     * @return static
+     */
+    public static function create($trackMetadata = false)
+    {
+        return new static($trackMetadata);
     }
 
     /**
      * Trigger transformers to load into this store
+     *
+     * @param TransformerInterface[] $transformers
+     * @return $this
      */
-    protected function transform()
+    public function transform($transformers)
     {
-        foreach ($this->transformers as $transformer) {
+        foreach ($transformers as $transformer) {
             $transformer->transform($this);
         }
+        return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function set($key, $value, $metadata = [])
+    public function set($class, $name, $data, $metadata = [])
     {
         $key = strtolower($key);
-        if($this->trackMetadata) {
-            if(isset($this->metadata[$key]) && isset($this->config[$key])) {
-                if(!isset($this->history[$key])) {
-                    $this->history[$key] = [];
+        if ($this->trackMetadata) {
+            if (isset($this->metadata[$class]) && isset($this->config[$class])) {
+                if (!isset($this->history[$class])) {
+                    $this->history[$class] = [];
                 }
 
-                array_unshift($this->history[$key], [
-                    'value' => $this->config[$key],
-                    'metadata' => $this->metadata[$key]
+                array_unshift($this->history[$class], [
+                    'value' => $this->config[$class],
+                    'metadata' => $this->metadata[$class]
                 ]);
             }
 
-            $this->metadata[$key] = $metadata;
+            $this->metadata[$class] = $metadata;
         }
 
-        $this->config[$key] = $value;
+        if ($name) {
+            if (!isset($this->config[$class])) {
+                $this->config[$class] = [];
+            }
+            $this->config[$class][$name] = $data;
+        } else {
+            $this->config[$class] = $data;
+        }
+        unset($this->configMiddleware[$class]);
+        return $this;
     }
 
-    public function get($key)
+    public function get($class, $name = null, $includeMiddleware = true)
     {
-        $key = strtolower($key);
-        if(!$this->exists($key)) {
+        $class = strtolower($class);
+        // Can't apply middleware to config on non-existant class
+        if (!isset($this->config[$class])) {
             return null;
         }
 
-        return $this->config[$key];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function exists($key)
-    {
-        $key = strtolower($key);
-        return array_key_exists($key, $this->config);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function delete($key)
-    {
-		$key = strtolower($key);
-            unset($this->config[$key]);
+        if ($includeMiddleware) {
+            if (array_key_exists($class, $this->configMiddleware)) {
+                $config = $this->configMiddleware[$class];
+            } else {
+                $config = $this->callMiddleware($class, function () use ($class) {
+                    return $this->config[$class];
+                });
+                $this->configMiddleware[$class] = $config;
+            }
+        } else {
+            $config = $this->config[$class];
         }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function deleteAll()
+        // Return either name, or whole-class config
+        if ($name) {
+            return isset($config[$name]) ? $config[$name] : null;
+        }
+        return $config;
+    }
+
+    public function exists($class, $name = null)
+    {
+        $class = strtolower($class);
+        $config = $this->get($class);
+        if (!isset($config)) {
+            return false;
+        }
+        if ($name && !array_key_exists($name, $config)) {
+            return false;
+        }
+        return true;
+    }
+
+    public function remove($class, $name = null)
+    {
+        $class = strtolower($class);
+        if ($name) {
+            unset($this->config[$class][$name]);
+        } else {
+            unset($this->config[$class]);
+        }
+        unset($this->configMiddleware[$class]);
+        return $this;
+    }
+
+    public function removeAll()
     {
         $this->config = [];
         $this->metadata = [];
         $this->history = [];
+        $this->configMiddleware = [];
+    }
+
+    public function merge($class, $name, $value)
+    {
+        // Detect mergeable config
+        $existing = $this->get($class, $name, false);
+        if (is_array($value) && is_array($existing)) {
+            $priority = new Priority();
+            $value = $priority->mergeArray($value, $existing);
+        }
+
+        // Apply
+        $this->set($class, $name, $value);
+        return $this;
     }
 
     /**
@@ -124,7 +187,7 @@ class ConfigCollection implements ConfigCollectionInterface, Serializable
      */
     public function getMetadata()
     {
-        if(!$this->trackMetadata || !is_array($this->metadata)) {
+        if (!$this->trackMetadata || !is_array($this->metadata)) {
             return [];
         }
 
@@ -136,22 +199,18 @@ class ConfigCollection implements ConfigCollectionInterface, Serializable
      */
     public function getHistory()
     {
-        if(!$this->trackMetadata || !is_array($this->history)) {
+        if (!$this->trackMetadata || !is_array($this->history)) {
             return [];
         }
 
         return $this->history;
     }
 
-    /**
-     * String representation of object
-     * @link http://php.net/manual/en/serializable.serialize.php
-     * @return string the string representation of the object or null
-     * @since 5.1.0
-     */
     public function serialize()
     {
-        // Note: No transformers are serialized because we don't need them
+        if ($this->getMiddlewares()) {
+            throw new BadMethodCallException("Can't serialise with middlewares");
+        }
         return json_encode([
             $this->config,
             $this->history,
@@ -179,15 +238,8 @@ class ConfigCollection implements ConfigCollectionInterface, Serializable
         ) = json_decode($serialized, true);
     }
 
-    public function __clone()
-    {
-        // Transformers are only required on original object
-        $this->transformers = [];
-    }
-
     public function nest()
     {
-        $nested = clone $this;
-        return $nested;
+        return clone $this;
     }
 }

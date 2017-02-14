@@ -2,11 +2,15 @@
 
 namespace micmania1\config;
 
+use micmania1\config\Middleware\Middleware;
+use micmania1\config\Middleware\MiddlewareAware;
 use Psr\Cache\CacheItemPoolInterface;
 use Exception;
 
 class CachedConfigCollection implements ConfigCollectionInterface
 {
+    use MiddlewareAware;
+
     /**
      * @const string
      */
@@ -18,6 +22,8 @@ class CachedConfigCollection implements ConfigCollectionInterface
     protected $pool;
 
     /**
+     * Nested config to delegate to
+     *
      * @var ConfigCollectionInterface
      */
     protected $collection;
@@ -26,6 +32,13 @@ class CachedConfigCollection implements ConfigCollectionInterface
      * @var callable
      */
     protected $collectionCreator;
+
+    /**
+     * Middlewares stored for nested configs
+     *
+     * @var Middleware[]
+     */
+    protected $nestedMiddlewares = null;
 
     /**
      * @var bool
@@ -51,37 +64,49 @@ class CachedConfigCollection implements ConfigCollectionInterface
         $this->pool = $pool;
         $this->collectionCreator = $collectionCreator;
         $this->flush = $flush;
+        if ($flush) {
+            $pool->clear();
     }
-
-    public function set($key, $value, $metadata = [])
-    {
-        return $this->collection->set($key, $value, $metadata);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function get($key)
-    {
-        return $this->getCollection()->get($key);
     }
 
     /**
-     * {@inheritdoc}
+     * @param CacheItemPoolInterface $pool
+     * @param callable $collectionCreator
+     * @param bool $flush
+     * @return static
      */
-    public function exists($key)
+    public static function create(CacheItemPoolInterface $pool, $collectionCreator, $flush = false)
     {
-        return $this->getCollection()->exists($key);
+        return new static($pool, $collectionCreator, $flush);
     }
 
-    public function delete($key)
+    public function get($class, $name = null, $includeMiddleware = true)
     {
-        return $this->getCollection()->delete($key);
+        if (!$includeMiddleware) {
+            return $this->getCollection()->get($class, $name, false);
     }
 
-    public function deleteAll()
+        // Apply local middleware against this request
+        $getConfig = function () use ($class) {
+            return $this->getCollection()->get($class, null, false);
+        };
+        $config = $this->callMiddleware($class, $getConfig);
+        if ($name) {
+            return isset($config[$name]) ? $config[$name] : null;
+        }
+        return $config;
+    }
+
+    public function exists($class, $name = null)
     {
-        $this->getCollection()->deleteAll();
+        $config = $this->get($class);
+        if (!isset($config)) {
+            return false;
+        }
+        if ($name && !array_key_exists($name, $config)) {
+            return false;
+        }
+        return true;
     }
 
     public function getMetadata()
@@ -89,9 +114,6 @@ class CachedConfigCollection implements ConfigCollectionInterface
         return $this->getCollection()->getMetadata();
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getHistory()
     {
         return $this->getCollection()->getHistory();
@@ -116,7 +138,7 @@ class CachedConfigCollection implements ConfigCollectionInterface
         if (!$this->flush && $cacheItem->isHit()) {
             $this->collection = $cacheItem->get();
             return $this->collection;
-    }
+        }
 
         // Cache missed
         $this->collection = call_user_func($this->collectionCreator);
@@ -129,16 +151,6 @@ class CachedConfigCollection implements ConfigCollectionInterface
         $this->dirty = true;
         $this->pool->saveDeferred($cacheItem);
         return $this->collection;
-    }
-
-    /**
-     * @param ConfigCollectionInterface $collection
-     * @return $this
-     */
-    public function setCollection($collection)
-    {
-        $this->collection = $collection;
-        return $this;
     }
 
     /**
@@ -161,12 +173,29 @@ class CachedConfigCollection implements ConfigCollectionInterface
     public function __destruct()
     {
         if ($this->dirty) {
-        $this->pool->commit();
+            $this->pool->commit();
+        }
     }
-}
 
     public function nest()
     {
-        return $this->getCollection()->nest();
+        // When nesting it's necessary to provide a middleware-disabled copy of the internal
+        // store with a list of useful middlewares
+        return $this
+            ->getCollection()
+            ->nest()
+            ->setMiddlewares($this->nestedMiddlewares);
+    }
+
+    /**
+     * Set middlewares to apply to nested configs
+     *
+     * @param $middleares
+     * @return $this
+     */
+    public function setNestedMiddlewares($middleares)
+    {
+        $this->nestedMiddlewares = $middleares;
+        return $this;
     }
 }

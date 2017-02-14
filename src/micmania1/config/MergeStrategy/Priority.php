@@ -2,8 +2,7 @@
 
 namespace micmania1\config\MergeStrategy;
 
-use micmania1\config\ConfigCollectionInterface;
-use micmania1\config\ConfigCollection;
+use micmania1\config\MutableConfigCollectionInterface;
 
 class Priority
 {
@@ -11,25 +10,25 @@ class Priority
      * Merges an array of values into a collection
      *
      * @param array $mine Map of key to array with value and metadata sub-keys
-     * @param ConfigCollectionInterface $theirs
-     * @return ConfigCollectionInterface
+     * @param MutableConfigCollectionInterface $theirs
+     * @return MutableConfigCollectionInterface
      */
-    public function merge(array $mine, ConfigCollectionInterface $theirs)
+    public function merge(array $mine, MutableConfigCollectionInterface $theirs)
     {
-        foreach ($mine as $key => $item) {
+        foreach ($mine as $class => $item) {
             // Ensure we have value/metadata keys
             $item = $this->normaliseItem($item);
             $value = $item['value'];
             $metadata = $item['metadata'];
 
             // If the item doesn't exist in theirs, we can just set it and continue.
-            if (!$theirs->exists($key)) {
-                $theirs->set($key, $value, $metadata);
+            if (!$theirs->exists($class)) {
+                $theirs->set($class, $value, $metadata);
                 continue;
             }
 
             // Get the two values for comparison
-            $theirValue = $theirs->get($key);
+            $theirValue = $theirs->get($class);
 
             // If its an array and the key already esists, we can use array_merge
             if (is_array($value) && is_array($theirValue)) {
@@ -39,11 +38,11 @@ class Priority
             // Preserve metadata
             if (!$metadata) {
                 $theirMetadata = $theirs->getMetadata();
-                if (isset($theirMetadata[$key])) {
-                    $metadata = $theirMetadata[$key];
+                if (isset($theirMetadata[$class])) {
+                    $metadata = $theirMetadata[$class];
                 }
             }
-            $theirs->set($key, $value, $metadata);
+            $theirs->set($class, $value, $metadata);
         }
 
         return $theirs;
@@ -74,7 +73,7 @@ class Priority
             }
 
             // If not set, or we're changing type we can set low priority
-            if (!isset($lowPriority[$key]) || !is_array($lowPriority[$key])) {
+            if (is_int($key) || !array_key_exists($key, $lowPriority) || !is_array($lowPriority[$key])) {
                 if (is_int($key)) {
                     $lowPriority[] = $value;
                 } else {

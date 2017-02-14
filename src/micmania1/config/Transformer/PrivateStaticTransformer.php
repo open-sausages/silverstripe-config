@@ -2,7 +2,7 @@
 
 namespace micmania1\config\Transformer;
 
-use micmania1\config\ConfigCollectionInterface;
+use micmania1\config\MutableConfigCollectionInterface;
 use ReflectionClass;
 use ReflectionProperty;
 
@@ -29,10 +29,10 @@ class PrivateStaticTransformer implements TransformerInterface
     /**
      * This loops through each class and fetches the private static config for each class.
      *
-     * @param ConfigCollectionInterface $collection
-     * @return ConfigCollectionInterface
+     * @param MutableConfigCollectionInterface $collection
+     * @return MutableConfigCollectionInterface
      */
-    public function transform(ConfigCollectionInterface $collection)
+    public function transform(MutableConfigCollectionInterface $collection)
     {
         // Lazy-resolve class list
         $classes = $this->getClasses();
@@ -58,7 +58,6 @@ class PrivateStaticTransformer implements TransformerInterface
      * array continaing all of its private statics
      *
      * @param string $class
-     *
      * @return mixed
      */
     protected function getClassConfig($class)

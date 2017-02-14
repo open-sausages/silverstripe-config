@@ -2,49 +2,33 @@
 
 namespace micmania1\config;
 
+use micmania1\config\Middleware\Middleware;
+
 /**
  * This represents a colletction of config keys and values.
  */
 interface ConfigCollectionInterface
 {
-    /**
-     * Set the value of a single item
-     *
-     * @param string $key
-     * @param mixed $value
-     * @param array $metadata
-     */
-    public function set($key, $value, $metadata = []);
 
     /**
-     * Fetches value
+     * Fetches value for a class, or a field on that class
      *
-     * @param string $key
+     * @param string $class
+     * @param string $name Optional sub-key to get
+     * @param bool $includeMiddleware Apply middleware
      *
      * @return mixed
      */
-    public function get($key);
+    public function get($class, $name = null, $includeMiddleware = true);
 
     /**
-     * Checks to see if a config item exists
+     * Checks to see if a config item exists, or a field on that class
      *
-     * @param string $key
-     *
-     * @return boolean
+     * @param string $class
+     * @param string $name
+     * @return bool
      */
-    public function exists($key);
-
-    /**
-     * Removed a config item including any associated metadata
-     *
-     * @param string $key
-     */
-    public function delete($key);
-
-    /**
-     * Delete all entries
-     */
-    public function deleteAll();
+    public function exists($class, $name = null);
 
     /**
      * Returns the entire metadata
@@ -64,7 +48,24 @@ interface ConfigCollectionInterface
      * Get nested version of this config,
      * which is a duplicated version of this config.
      *
-     * @return mixed
+     * @return self
      */
     public function nest();
+
+    /**
+     * @return Middleware[]
+     */
+    public function getMiddlewares();
+
+    /**
+     * @param Middleware[] $middlewares
+     * @return $this
+     */
+    public function setMiddlewares($middlewares);
+
+    /**
+     * @param Middleware $middleware
+     * @return $this
+     */
+    public function addMiddleware($middleware);
 }

@@ -71,7 +71,7 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
 
     public function set($class, $name, $data, $metadata = [])
     {
-        $key = strtolower($key);
+        $class = strtolower($class);
         if ($this->trackMetadata) {
             if (isset($this->metadata[$class]) && isset($this->config[$class])) {
                 if (!isset($this->history[$class])) {
@@ -114,11 +114,10 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
     public function exists($class, $name = null)
     {
         $class = strtolower($class);
-        $config = $this->get($class);
-        if (!isset($config)) {
+        if (!isset($this->config[$class])) {
             return false;
         }
-        if ($name && !array_key_exists($name, $config)) {
+        if ($name && !array_key_exists($name, $this->config[$class])) {
             return false;
         }
         return true;
@@ -202,16 +201,7 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
             $this->trackMetadata
         ]);
     }
-
-    /**
-     * Constructs the object
-     * @link http://php.net/manual/en/serializable.unserialize.php
-     * @param string $serialized <p>
-     * The string representation of the object.
-     * </p>
-     * @return void
-     * @since 5.1.0
-     */
+    
     public function unserialize($serialized)
     {
         list(
@@ -234,6 +224,7 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
      */
     protected function getClassConfig($class, $includeMiddleware)
     {
+        $class = strtolower($class);
         // Can't apply middleware to config on non-existant class
         if (!isset($this->config[$class])) {
             return null;

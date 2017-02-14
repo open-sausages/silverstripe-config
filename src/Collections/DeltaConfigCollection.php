@@ -65,6 +65,7 @@ class DeltaConfigCollection extends ConfigCollection
 
     protected function getClassConfig($class, $includeMiddleware = true)
     {
+        $class = strtolower($class);
         // Not a class with config
         if (!isset($this->config[$class])) {
             return null;

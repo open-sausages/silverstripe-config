@@ -5,7 +5,6 @@ namespace micmania1\config\Collections;
 use micmania1\config\Middleware\Middleware;
 use micmania1\config\Middleware\MiddlewareAware;
 use Psr\Cache\CacheItemPoolInterface;
-use Exception;
 
 class CachedConfigCollection implements ConfigCollectionInterface
 {
@@ -66,7 +65,7 @@ class CachedConfigCollection implements ConfigCollectionInterface
         $this->flush = $flush;
         if ($flush) {
             $pool->clear();
-    }
+        }
     }
 
     /**
@@ -84,7 +83,7 @@ class CachedConfigCollection implements ConfigCollectionInterface
     {
         if (!$includeMiddleware) {
             return $this->getCollection()->get($class, $name, false);
-    }
+        }
 
         // Apply local middleware against this request
         $getConfig = function () use ($class) {
@@ -156,20 +155,6 @@ class CachedConfigCollection implements ConfigCollectionInterface
         $this->dirty = true;
         $this->pool->saveDeferred($cacheItem);
         return $this->collection;
-    }
-
-    /**
-     * We replace backslashes with commas as backslashes are not allowed in PSR-6
-     * implementations. Commas will rarely (if ever) be used for cache keys. We also
-     * convert the key to lowercase to ensure case insensitivity.
-     *
-     * @param string $key
-     *
-     * @return string
-     */
-    protected function normaliseKey($key)
-    {
-        return str_replace('\\', ',', strtolower($key));
     }
 
     /**

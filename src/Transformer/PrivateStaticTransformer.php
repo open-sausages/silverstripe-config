@@ -47,7 +47,7 @@ class PrivateStaticTransformer implements TransformerInterface
             $item = $this->getClassConfig($class);
 
             // Add the item to the collection
-            $collection->set($class, $item['value'], $item['metadata']);
+            $collection->set($class, null, $item['value'], $item['metadata']);
         }
 
         return $collection;

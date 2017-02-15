@@ -201,7 +201,7 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
             $this->trackMetadata
         ]);
     }
-    
+
     public function unserialize($serialized)
     {
         list(

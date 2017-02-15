@@ -52,24 +52,40 @@ class CacheMiddleware implements Middleware
      */
     public function getClassConfig($class, $next)
     {
+        $key = $this->normaliseKey($class);
+
         // Process hit from non-persistant cache
-        if (isset($this->memoryCache[$class])) {
-            return $this->memoryCache[$class];
+        if (isset($this->memoryCache[$key])) {
+            return $this->memoryCache[$key];
         }
 
         // Process hit from persistant cache
-        $item = $this->pool->getItem($class);
+        $item = $this->pool->getItem($key);
         if ($item->isHit()) {
             $result = $item->get();
-            $this->memoryCache[$class] = $result;
+            $this->memoryCache[$key] = $result;
             return $result;
         }
 
         // Process miss
-        $result = $next();
+        $result = $next($class);
         $item->set($result);
-        $this->pool->save($result);
-        $this->memoryCache[$class] = $result;
+        $this->pool->save($item);
+        $this->memoryCache[$key] = $result;
         return $result;
+    }
+
+    /**
+     * We replace backslashes with commas as backslashes are not allowed in PSR-6
+     * implementations. Commas will rarely (if ever) be used for cache keys. We also
+     * convert the key to lowercase to ensure case insensitivity.
+     *
+     * @param string $key
+     *
+     * @return string
+     */
+    protected function normaliseKey($key)
+    {
+        return str_replace('\\', ',', strtolower($key));
     }
 }

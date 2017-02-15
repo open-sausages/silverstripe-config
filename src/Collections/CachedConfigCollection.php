@@ -52,31 +52,11 @@ class CachedConfigCollection implements ConfigCollectionInterface
     protected $dirty = false;
 
     /**
-     * Provides a cached interface over the top of a core config
-     *
-     * @param CacheItemPoolInterface $pool
-     * @param callable $collectionCreator Factory to generate cached collection
-     * @param bool $flush Set to true to force the cache to regenerate
-     */
-    public function __construct(CacheItemPoolInterface $pool, $collectionCreator, $flush = false)
-    {
-        $this->pool = $pool;
-        $this->collectionCreator = $collectionCreator;
-        $this->flush = $flush;
-        if ($flush) {
-            $pool->clear();
-        }
-    }
-
-    /**
-     * @param CacheItemPoolInterface $pool
-     * @param callable $collectionCreator
-     * @param bool $flush
      * @return static
      */
-    public static function create(CacheItemPoolInterface $pool, $collectionCreator, $flush = false)
+    public static function create()
     {
-        return new static($pool, $collectionCreator, $flush);
+        return new static();
     }
 
     public function get($class, $name = null, $includeMiddleware = true)
@@ -188,5 +168,67 @@ class CachedConfigCollection implements ConfigCollectionInterface
     {
         $this->nestedMiddlewares = $middleares;
         return $this;
+    }
+
+    /**
+     * Set a pool
+     *
+     * @param CacheItemPoolInterface $pool
+     * @return $this
+     */
+    public function setPool(CacheItemPoolInterface $pool)
+    {
+        $this->pool = $pool;
+        if ($this->flush) {
+            $pool->clear();
+        }
+        return $this;
+    }
+
+    /**
+     * @param callable $collectionCreator
+     * @return $this
+     */
+    public function setCollectionCreator($collectionCreator)
+    {
+        $this->collectionCreator = $collectionCreator;
+        return $this;
+    }
+
+    /**
+     * @return callable
+     */
+    public function getCollectionCreator()
+    {
+        return $this->collectionCreator;
+    }
+
+    /**
+     * @return CacheItemPoolInterface
+     */
+    public function getPool()
+    {
+        return $this->pool;
+    }
+
+    /**
+     * @param bool $flush
+     * @return $this
+     */
+    public function setFlush($flush)
+    {
+        $this->flush = $flush;
+        if ($flush && $this->pool) {
+            $this->pool->clear();
+        }
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getFlush()
+    {
+        return $this->flush;
     }
 }

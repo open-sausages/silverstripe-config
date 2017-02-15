@@ -23,12 +23,12 @@ class Priority
 
             // If the item doesn't exist in theirs, we can just set it and continue.
             if (!$theirs->exists($class)) {
-                $theirs->set($class, $value, $metadata);
+                $theirs->set($class, null, $value, $metadata);
                 continue;
             }
 
             // Get the two values for comparison
-            $theirValue = $theirs->get($class);
+            $theirValue = $theirs->get($class, null, false);
 
             // If its an array and the key already esists, we can use array_merge
             if (is_array($value) && is_array($theirValue)) {
@@ -42,7 +42,7 @@ class Priority
                     $metadata = $theirMetadata[$class];
                 }
             }
-            $theirs->set($class, $value, $metadata);
+            $theirs->set($class, null, $value, $metadata);
         }
 
         return $theirs;

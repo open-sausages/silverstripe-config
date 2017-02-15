@@ -81,6 +81,16 @@ class YamlTransformer implements TransformerInterface
     }
 
     /**
+     * @param string $baseDir directory to scan for yaml files
+     * @param Finder $finder
+     * @return static
+     */
+    public static function create($baseDir, Finder $finder)
+    {
+        return new static($baseDir, $finder);
+    }
+
+    /**
      * This is responsible for parsing a single yaml file and returning it into a format
      * that Config can understand. Config will then be responsible for turning thie
      * output into the final merged config.
@@ -128,11 +138,13 @@ class YamlTransformer implements TransformerInterface
      *
      * @param string $rule
      * @param Closure $func
+     * @return $this
      */
     public function addRule($rule, Closure $func)
     {
         $rule = strtolower($rule);
         $this->rules[$rule] = $func;
+        return $this;
     }
 
     /**

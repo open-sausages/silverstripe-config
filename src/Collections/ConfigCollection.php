@@ -17,6 +17,8 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
 
     /**
      * Stores a list of key/value config.
+     * Note: This set does not include middleware-applied values.
+     * Use getClassConfig() if needed.
      *
      * @var array
      */
@@ -114,13 +116,13 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
     public function exists($class, $name = null)
     {
         $class = strtolower($class);
-        if (!isset($this->config[$class])) {
-            return false;
+        if (!$name) {
+            return isset($this->config[$class]);
         }
-        if ($name && !array_key_exists($name, $this->config[$class])) {
-            return false;
-        }
-        return true;
+
+        // Get with middleware (in case class.name is added via extension)
+        $config = $this->get($class);
+        return (isset($config) && array_key_exists($name, $config));
     }
 
     public function remove($class, $name = null)
@@ -142,7 +144,7 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
     }
 
     /**
-     * Get complete config
+     * Get complete config (excludes middleware-applied config)
      *
      * @return array
      */

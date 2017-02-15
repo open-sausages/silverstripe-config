@@ -83,14 +83,13 @@ class CachedConfigCollection implements ConfigCollectionInterface
 
     public function exists($class, $name = null)
     {
+        if (!$name) {
+            return $this->getCollection()->get($class, null);
+        }
+
+        // Get with middleware (in case class.name is added via extension)
         $config = $this->get($class);
-        if (!isset($config)) {
-            return false;
-        }
-        if ($name && !array_key_exists($name, $config)) {
-            return false;
-        }
-        return true;
+        return (isset($config) && array_key_exists($name, $config));
     }
 
     public function getMetadata()

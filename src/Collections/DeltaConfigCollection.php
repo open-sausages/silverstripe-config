@@ -36,10 +36,12 @@ class DeltaConfigCollection extends ConfigCollection
     /**
      * @param ConfigCollectionInterface $parent
      */
-    public function __construct(ConfigCollectionInterface $parent)
+    public function __construct(ConfigCollectionInterface $parent = null)
     {
         parent::__construct();
-        $this->setParent($parent);
+        if ($parent) {
+            $this->setParent($parent);
+        }
     }
 
     /**

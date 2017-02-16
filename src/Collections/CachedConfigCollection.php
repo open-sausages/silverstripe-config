@@ -59,21 +59,24 @@ class CachedConfigCollection implements ConfigCollectionInterface
         return new static();
     }
 
+    /**
+     * In-memory cache
+     *
+     * @var array
+     */
+    protected $cache = [];
+
     public function get($class, $name = null, $includeMiddleware = true)
     {
-        if (!$includeMiddleware) {
-            return $this->getCollection()->get($class, $name, false);
+        $class = strtolower($class);
+        $key = $class.'-'.$name.'-'.$includeMiddleware;
+        if (array_key_exists($key, $this->cache)) {
+            return $this->cache[$key];
         }
 
-        // Apply local middleware against this request
-        $getConfig = function () use ($class) {
-            return $this->getCollection()->get($class, null, false);
-        };
-        $config = $this->callMiddleware($class, $getConfig);
-        if ($name) {
-            return isset($config[$name]) ? $config[$name] : null;
-        }
-        return $config;
+        $result = $this->getUncached($class, $name, $includeMiddleware);
+        $this->cache[$key] = $result;
+        return $result;
     }
 
     public function getAll()
@@ -229,5 +232,28 @@ class CachedConfigCollection implements ConfigCollectionInterface
     public function getFlush()
     {
         return $this->flush;
+    }
+
+    /**
+     * @param string $class
+     * @param string $name
+     * @param bool $includeMiddleware
+     * @return mixed
+     */
+    protected function getUncached($class, $name, $includeMiddleware)
+    {
+        if (!$includeMiddleware) {
+            return $this->getCollection()->get($class, $name, false);
+        }
+
+        // Apply local middleware against this request
+        $getConfig = function () use ($class) {
+            return $this->getCollection()->get($class, null, false);
+        };
+        $config = $this->callMiddleware($class, $getConfig);
+        if ($name) {
+            return isset($config[$name]) ? $config[$name] : null;
+        }
+        return $config;
     }
 }

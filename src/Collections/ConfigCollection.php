@@ -153,6 +153,20 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
         return $this->config;
     }
 
+    /**
+     * synonym for merge()
+     *
+     * @param string $class
+     * @param string $name
+     * @param mixed $value
+     * @return $this
+     */
+    public function update($class, $name, $value)
+    {
+        $this->merge($class, $name, $value);
+        return $this;
+    }
+
     public function merge($class, $name, $value)
     {
         // Detect mergeable config

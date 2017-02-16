@@ -10,14 +10,14 @@ class Priority
      * Merges an array of values into a collection
      *
      * @param array $mine Map of key to array with value and metadata sub-keys
-     * @param \micmania1\config\Collections\MutableConfigCollectionInterface $theirs
+     * @param MutableConfigCollectionInterface $theirs
      * @return MutableConfigCollectionInterface
      */
-    public function merge(array $mine, MutableConfigCollectionInterface $theirs)
+    public static function merge(array $mine, MutableConfigCollectionInterface $theirs)
     {
         foreach ($mine as $class => $item) {
             // Ensure we have value/metadata keys
-            $item = $this->normaliseItem($item);
+            $item = static::normaliseItem($item);
             $value = $item['value'];
             $metadata = $item['metadata'];
 
@@ -32,7 +32,7 @@ class Priority
 
             // If its an array and the key already esists, we can use array_merge
             if (is_array($value) && is_array($theirValue)) {
-                $value = $this->mergeArray($value, $theirValue);
+                $value = static::mergeArray($value, $theirValue);
             }
 
             // Preserve metadata
@@ -58,7 +58,7 @@ class Priority
      *
      * @return array
      */
-    public function mergeArray(array $highPriority, array $lowPriority)
+    public static function mergeArray(array $highPriority, array $lowPriority)
     {
         foreach ($highPriority as $key => $value) {
             // If value isn't an array, we can overwrite whatever was before it
@@ -84,7 +84,7 @@ class Priority
             }
 
             // We have two arrays, so we merge
-            $lowPriority[$key] = $this->mergeArray($value, $lowPriority[$key]);
+            $lowPriority[$key] = static::mergeArray($value, $lowPriority[$key]);
         }
 
         return $lowPriority;
@@ -97,7 +97,7 @@ class Priority
      *
      * @return array
      */
-    protected function normaliseItem(array $item)
+    protected static function normaliseItem(array $item)
     {
         if (!isset($item['value'])) {
             $item['value'] = '';

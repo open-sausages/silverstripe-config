@@ -100,8 +100,6 @@ class YamlTransformer implements TransformerInterface
      */
     public function transform(MutableConfigCollectionInterface $collection)
     {
-        $mergeStrategy = new Priority();
-
         $documents = $this->getSortedYamlDocuments();
 
         foreach ($documents as $document) {
@@ -123,7 +121,7 @@ class YamlTransformer implements TransformerInterface
                     ];
                 }
 
-                $mergeStrategy->merge($items, $collection);
+                Priority::merge($items, $collection);
             }
         }
 

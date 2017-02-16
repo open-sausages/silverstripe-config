@@ -158,8 +158,7 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
         // Detect mergeable config
         $existing = $this->get($class, $name, false);
         if (is_array($value) && is_array($existing)) {
-            $priority = new Priority();
-            $value = $priority->mergeArray($value, $existing);
+            $value = Priority::mergeArray($value, $existing);
         }
 
         // Apply

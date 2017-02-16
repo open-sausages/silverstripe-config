@@ -350,7 +350,7 @@ class YamlTransformer implements TransformerInterface
         foreach ($header[$flag] as $dependency) {
             // Because wildcards and hashes exist, our 'dependency' might actually match
             // multiple blocks and therefore could be multiple dependencies.
-            $matchingDocuments = $this->getMatchingDocuments($dependency, $documents);
+            $matchingDocuments = $this->getMatchingDocuments($dependency, $documents, $flag);
 
             foreach ($matchingDocuments as $document) {
                 $dependencyName = $document['header']['name'];
@@ -376,11 +376,11 @@ class YamlTransformer implements TransformerInterface
      * expected to come from before/after blocks of yaml (eg. framwork/*).
      *
      * @param string $pattern
-     * @param array
-     *
+     * @param array $documents
+     * @param string $flag 'before' / 'after'
      * @return array
      */
-    protected function getMatchingDocuments($pattern, $documents)
+    protected function getMatchingDocuments($pattern, $documents, $flag)
     {
         // If the pattern exists as a document name then its just a simple name match
         // and we can return that single document.
@@ -395,14 +395,22 @@ class YamlTransformer implements TransformerInterface
             if (isset($documents[$name])) {
                 return [$documents[$name]];
             }
-
             return [];
         }
 
-        // If we only have an astericks, we'll add all unnamed docs. By excluding named docs
-        // we don't run into a circular depndency issue.
+        // After="*" docs are after all documents except OTHER After="*",
+        // and likewise for Before="*"
         if ($pattern === '*') {
-            $pattern = 'anonymous-*';
+            return array_filter($documents, function ($document) use ($flag) {
+                if (empty($document['header'][$flag])) {
+                    return true;
+                }
+                $otherPatterns = $document['header'][$flag];
+                if (is_array($otherPatterns)) {
+                    return !in_array('*', $otherPatterns);
+                }
+                return $otherPatterns !== '*';
+            });
         }
 
         // Do pattern matching on file names. This requires us to loop through each document

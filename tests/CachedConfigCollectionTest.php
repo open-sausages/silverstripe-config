@@ -1,7 +1,7 @@
 <?php
 
 use micmania1\config\Collections\CachedConfigCollection;
-use micmania1\config\Collections\ConfigCollection;
+use micmania1\config\Collections\MemoryConfigCollection;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Prophet;
 use Psr\Cache\CacheItemPoolInterface;

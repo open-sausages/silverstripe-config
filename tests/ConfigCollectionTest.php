@@ -1,13 +1,13 @@
 <?php
 
-use micmania1\config\Collections\ConfigCollection;
+use micmania1\config\Collections\MemoryConfigCollection;
 use PHPUnit\Framework\TestCase;
 
 class ConfigCollectionTest extends TestCase
 {
     public function testGetSetAndDelete()
     {
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
 
         $collection->set('test', 'value');
         $this->assertTrue($collection->exists('test'));
@@ -26,7 +26,7 @@ class ConfigCollectionTest extends TestCase
     public function testNoMetadataTracking()
     {
         // metadata should be turned off by default
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $collection->set('key1', 'value1');
 
         $this->assertEquals('value1', $collection->get('key1'));
@@ -42,7 +42,7 @@ class ConfigCollectionTest extends TestCase
 
     public function testMetadataAndHistoryTracking()
     {
-        $collection = new ConfigCollection(true);
+        $collection = new MemoryConfigCollection(true);
 
         $collection->set('key1', 'value1', ['metakey' => 'metavalue1']);
         $this->assertEquals('value1', $collection->get('key1'));

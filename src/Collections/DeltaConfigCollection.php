@@ -9,7 +9,7 @@ namespace micmania1\config\Collections;
  * Has extra logic for maintaining local cache of modified config,
  * as well as the ability to fail over to a parent source for un-modified.
  */
-class DeltaConfigCollection extends ConfigCollection
+class DeltaConfigCollection extends MemoryConfigCollection
 {
     /**
      * Used to retrieve middleware-applied config for unmodified classes
@@ -123,6 +123,7 @@ class DeltaConfigCollection extends ConfigCollection
     protected function alter($class)
     {
         // Ensure middleware is re-applied for this config
+        $class = strtolower($class);
         $this->altered[$class] = $class;
         unset($this->configMiddlewareCache[$class]);
         return $this;
@@ -138,6 +139,7 @@ class DeltaConfigCollection extends ConfigCollection
      */
     protected function isAltered($class)
     {
+        $class = strtolower($class);
         return isset($this->altered[$class]);
     }
 }

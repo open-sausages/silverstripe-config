@@ -9,9 +9,9 @@ use micmania1\config\Transformer\TransformerInterface;
 use Serializable;
 
 /**
- * Basic mutable config collection
+ * Basic mutable config collection stored in memory
  */
-class ConfigCollection implements MutableConfigCollectionInterface, Serializable
+class MemoryConfigCollection implements MutableConfigCollectionInterface, Serializable
 {
     use MiddlewareAware;
 
@@ -113,16 +113,16 @@ class ConfigCollection implements MutableConfigCollectionInterface, Serializable
         return $config;
     }
 
-    public function exists($class, $name = null)
+    public function exists($class, $name = null, $includeMiddleware = true)
     {
-        $class = strtolower($class);
-        if (!$name) {
-            return isset($this->config[$class]);
+        $config = $this->get($class, null, $includeMiddleware);
+        if (!isset($config)) {
+            return false;
         }
-
-        // Get with middleware (in case class.name is added via extension)
-        $config = $this->get($class);
-        return (isset($config) && array_key_exists($name, $config));
+        if ($name) {
+            return array_key_exists($name, $config);
+        }
+        return true;
     }
 
     public function remove($class, $name = null)

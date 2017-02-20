@@ -26,9 +26,10 @@ interface ConfigCollectionInterface
      *
      * @param string $class
      * @param string $name
+     * @param bool $includeMiddleware
      * @return bool
      */
-    public function exists($class, $name = null);
+    public function exists($class, $name = null, $includeMiddleware = true);
 
     /**
      * Returns the entire metadata

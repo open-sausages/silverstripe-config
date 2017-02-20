@@ -561,6 +561,7 @@ class YamlTransformer implements TransformerInterface
      */
     protected function testSingleRule($rule, $params)
     {
+        $rule = strtolower($rule);
         if (!$this->hasRule($rule)) {
             throw new Exception(sprintf('Rule \'%s\' doesn\'t exist.', $rule));
         }

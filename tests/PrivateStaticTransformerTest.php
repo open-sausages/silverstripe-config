@@ -1,7 +1,7 @@
 <?php
 
 use micmania1\config\Transformer\PrivateStaticTransformer;
-use micmania1\config\Collections\ConfigCollection;
+use micmania1\config\Collections\MemoryConfigCollection;
 use PHPUnit\Framework\TestCase;
 
 class PrivateStaticTransformerTest extends TestCase
@@ -13,7 +13,7 @@ class PrivateStaticTransformerTest extends TestCase
     public function testLookup()
     {
         $classes = [PrivateStaticTransformerTest_ClassA::class];
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $transformer = new PrivateStaticTransformer($classes, $collection);
 
         $transformer->transform();
@@ -41,7 +41,7 @@ class PrivateStaticTransformerTest extends TestCase
             PrivateStaticTransformerTest_ClassA::class,
             PrivateStaticTransformerTest_ClassB::class,
         ];
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $transformer = new PrivateStaticTransformer($classes, $collection);
 
         $transformer->transform();
@@ -79,7 +79,7 @@ class PrivateStaticTransformerTest extends TestCase
             $this->markTestSkipped($class . ' exists but the test expects it not to.');
         }
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $transformer = new PrivateStaticTransformer([$class], $collection);
         $transformer->transform();
         $this->assertFalse($collection->exists($class));

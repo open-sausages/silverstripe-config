@@ -2,7 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 use micmania1\config\MergeStrategy\Priority;
-use micmania1\config\Collections\ConfigCollection;
+use micmania1\config\Collections\MemoryConfigCollection;
 use Prophecy\Prophet;
 use Prophecy\Argument;
 
@@ -22,7 +22,7 @@ class PriorityTest extends TestCase
     {
         $myCollection = ['key1' => ['value' => 'importantvalue']];
 
-        $theirCollection = new ConfigCollection;
+        $theirCollection = new MemoryConfigCollection;
         $theirCollection->set('key1', 'lessimportantvalue');
 
         $this->strategy->merge($myCollection, $theirCollection);
@@ -33,7 +33,7 @@ class PriorityTest extends TestCase
     {
         $myCollection = ['key1' => ['value' => ['array item 1']]];
 
-        $theirCollection = new ConfigCollection;
+        $theirCollection = new MemoryConfigCollection;
         $theirCollection->set('key1', ['array item 2']);
 
         $this->strategy->merge($myCollection, $theirCollection);
@@ -45,7 +45,7 @@ class PriorityTest extends TestCase
     {
         $myCollection = ['key1' => ['value' => ['arrKey1' => 'val1', 'arrKey2' => 'val2']]];
 
-        $theirCollection = new ConfigCollection;
+        $theirCollection = new MemoryConfigCollection;
         $theirCollection->set('key1', ['arrKey1' => 'lessimportant', 'arrKey3' => 'val3']);
 
         $this->strategy->merge($myCollection, $theirCollection);
@@ -58,7 +58,7 @@ class PriorityTest extends TestCase
     {
         $myCollection = ['key1' => ['value' => ['array item 1']]];
 
-        $theirCollection = new ConfigCollection;
+        $theirCollection = new MemoryConfigCollection;
         $theirCollection->set('key1', 'my string');
 
         // We should see the array unchanged as it has higher priority than the string
@@ -70,7 +70,7 @@ class PriorityTest extends TestCase
     {
         $myCollection = ['key1' => ['value' => 'my string']];
 
-        $theirCollection = new ConfigCollection;
+        $theirCollection = new MemoryConfigCollection;
         $theirCollection->set('key1', ['array item 1']);
 
         // We should see the string untouched as its higher priority.

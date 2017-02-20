@@ -68,15 +68,15 @@ class CachedConfigCollection implements ConfigCollectionInterface
 
     public function get($class, $name = null, $includeMiddleware = true)
     {
+        // Get config for complete class
         $class = strtolower($class);
-        $key = $class.'-'.$name.'-'.$includeMiddleware;
-        if (array_key_exists($key, $this->cache)) {
-            return $this->cache[$key];
-        }
+        $config = $this->getClassConfig($class, $includeMiddleware);
 
-        $result = $this->getUncached($class, $name, $includeMiddleware);
-        $this->cache[$key] = $result;
-        return $result;
+        // Return either name, or whole-class config
+        if ($name) {
+            return isset($config[$name]) ? $config[$name] : null;
+        }
+        return $config;
     }
 
     public function getAll()
@@ -84,15 +84,16 @@ class CachedConfigCollection implements ConfigCollectionInterface
         return $this->getCollection()->getAll();
     }
 
-    public function exists($class, $name = null)
+    public function exists($class, $name = null, $includeMiddleware = true)
     {
-        if (!$name) {
-            return $this->getCollection()->get($class, null);
+        $config = $this->get($class, null, $includeMiddleware);
+        if (!isset($config)) {
+            return false;
         }
-
-        // Get with middleware (in case class.name is added via extension)
-        $config = $this->get($class);
-        return (isset($config) && array_key_exists($name, $config));
+        if ($name) {
+            return array_key_exists($name, $config);
+        }
+        return true;
     }
 
     public function getMetadata()
@@ -151,6 +152,8 @@ class CachedConfigCollection implements ConfigCollectionInterface
 
     public function nest()
     {
+        // @todo - Inject nested collection creater
+
         // Create locally-modifiable collection which points back to
         // this self-reference.
         // This allows un-modified clases to continue to benefit from
@@ -162,6 +165,8 @@ class CachedConfigCollection implements ConfigCollectionInterface
 
     /**
      * Set middlewares to apply to nested configs
+     *
+     * @todo - make redundant through having a nested creator factory apply this
      *
      * @param $middleares
      * @return $this
@@ -235,25 +240,41 @@ class CachedConfigCollection implements ConfigCollectionInterface
     }
 
     /**
+     * Get cache class config, or cache and return
+     *
      * @param string $class
-     * @param string $name
      * @param bool $includeMiddleware
      * @return mixed
      */
-    protected function getUncached($class, $name, $includeMiddleware)
+    public function getClassConfig($class, $includeMiddleware)
+    {
+        $key = $class . '-' . $includeMiddleware;
+        if (array_key_exists($key, $this->cache)) {
+            return $this->cache[$key];
+        }
+
+        $result = $this->getUncachedClassConfig($class, $includeMiddleware);
+        $this->cache[$key] = $result;
+        return $result;
+    }
+
+    /**
+     * Get uncached class config
+     *
+     * @param string $class
+     * @param bool $includeMiddleware
+     * @return mixed
+     */
+    protected function getUncachedClassConfig($class, $includeMiddleware)
     {
         if (!$includeMiddleware) {
-            return $this->getCollection()->get($class, $name, false);
+            return $this->getCollection()->get($class, null, false);
         }
 
         // Apply local middleware against this request
         $getConfig = function () use ($class) {
             return $this->getCollection()->get($class, null, false);
         };
-        $config = $this->callMiddleware($class, $getConfig);
-        if ($name) {
-            return isset($config[$name]) ? $config[$name] : null;
-        }
-        return $config;
+        return $this->callMiddleware($class, $getConfig);
     }
 }

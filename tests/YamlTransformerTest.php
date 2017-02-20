@@ -1,7 +1,7 @@
 <?php
 
 use micmania1\config\Transformer\YamlTransformer;
-use micmania1\config\Collections\ConfigCollection;
+use micmania1\config\Collections\MemoryConfigCollection;
 use PHPUnit\Framework\TestCase;
 use org\bovigo\vfs\vfsStream;
 use Symfony\Component\Finder\Finder;
@@ -76,7 +76,7 @@ class YamlTransformerTest extends TestCase
     {
         file_put_contents($this->getFilePath('empty.yml'), '');
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $transformer = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -107,7 +107,7 @@ YAML;
 
         file_put_contents($this->getFilePath('config2.yml'), $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $transformer = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -142,7 +142,7 @@ YAML;
         $file = $this->getFilePath('config.yml');
         file_put_contents($file, $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $transformer = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -178,7 +178,7 @@ Test: blah
 YAML;
         file_put_contents($this->getFilePath('config.yml'), $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $transformer = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -221,7 +221,7 @@ test: 'set first'
 YAML;
         file_put_contents($this->getFilePath('zzz.yml'), $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $transformer = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -252,7 +252,7 @@ test: 'overwritten'
 YAML;
         file_put_contents($this->getFilePath('first.yml'), $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $transformer = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -287,7 +287,7 @@ YAML;
         mkdir($this->getConfigDirectory().'/test2');
         file_put_contents($this->getFilePath('test2/config.yml'), $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $transformer = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -306,7 +306,7 @@ test: 'overwrite'
 YAML;
         file_put_contents($this->getFilePath('test2/config.yml'), $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $transformer = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -339,7 +339,7 @@ test: test
 YAML;
         file_put_contents($this->getFilePath('config.yml'), $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $transformer = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -379,7 +379,7 @@ test: 'not applied'
 YAML;
         file_put_contents($this->getFilePath('config.yml'), $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $yaml = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -424,7 +424,7 @@ test: 'not applied'
 YAML;
         file_put_contents($this->getFilePath('config.yml'), $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $yaml = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -478,7 +478,7 @@ test2: test2
 YAML;
         file_put_contents($this->getFilePath('config.yml'), $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $yaml = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -513,7 +513,7 @@ test2: 'test2'
 YAML;
         file_put_contents($this->getFilePath('config.yml'), $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $yaml = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),
@@ -564,7 +564,7 @@ arrays: passed
 YAML;
         file_put_contents($this->getFilePath('config.yml'), $content);
 
-        $collection = new ConfigCollection;
+        $collection = new MemoryConfigCollection;
         $yaml = new YamlTransformer(
             $this->getConfigDirectory(),
             $this->getFinder(),

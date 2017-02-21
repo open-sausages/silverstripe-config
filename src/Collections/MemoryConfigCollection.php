@@ -89,8 +89,13 @@ class MemoryConfigCollection implements MutableConfigCollectionInterface, Serial
             $this->config[$class] = $data;
         }
 
-        // Discard call cache
+        // Flush call cache for this class, and any subclasses
         unset($this->callCache[$class]);
+        foreach ($this->callCache as $nextClass => $data) {
+            if (is_subclass_of($nextClass, $class, true)) {
+                unset($this->callCache[$nextClass]);
+            }
+        }
         return $this;
     }
 
@@ -150,9 +155,9 @@ class MemoryConfigCollection implements MutableConfigCollectionInterface, Serial
         return $result;
     }
 
-    public function exists($class, $name = null, $includeMiddleware = true)
+    public function exists($class, $name = null, $options = 0)
     {
-        $config = $this->get($class, null, $includeMiddleware);
+        $config = $this->get($class, null, $options);
         if (!isset($config)) {
             return false;
         }

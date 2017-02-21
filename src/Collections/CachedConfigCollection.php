@@ -2,7 +2,7 @@
 
 namespace micmania1\config\Collections;
 
-use micmania1\config\Middleware\Middleware;
+use BadMethodCallException;
 use micmania1\config\Middleware\MiddlewareAware;
 use Psr\Cache\CacheItemPoolInterface;
 
@@ -13,7 +13,7 @@ class CachedConfigCollection implements ConfigCollectionInterface
     /**
      * @const string
      */
-    const CACHE_KEY = '__CONFIG__';
+    const CACHE_KEY = '__CACHE__';
 
     /**
      * @var CacheItemPoolInterface
@@ -33,23 +33,9 @@ class CachedConfigCollection implements ConfigCollectionInterface
     protected $collectionCreator;
 
     /**
-     * Middlewares stored for nested configs
-     *
-     * @var Middleware[]
-     */
-    protected $nestedMiddlewares = null;
-
-    /**
      * @var bool
      */
     protected $flush = false;
-
-    /**
-     * Set to true if cached item is dirty and marked for deferred write
-     *
-     * @var bool
-     */
-    protected $dirty = false;
 
     /**
      * @return static
@@ -59,24 +45,9 @@ class CachedConfigCollection implements ConfigCollectionInterface
         return new static();
     }
 
-    /**
-     * In-memory cache
-     *
-     * @var array
-     */
-    protected $cache = [];
-
-    public function get($class, $name = null, $includeMiddleware = true)
+    public function get($class, $name = null, $options = 0)
     {
-        // Get config for complete class
-        $class = strtolower($class);
-        $config = $this->getClassConfig($class, $includeMiddleware);
-
-        // Return either name, or whole-class config
-        if ($name) {
-            return isset($config[$name]) ? $config[$name] : null;
-        }
-        return $config;
+        return $this->getCollection()->get($class, $name, $options);
     }
 
     public function getAll()
@@ -84,16 +55,9 @@ class CachedConfigCollection implements ConfigCollectionInterface
         return $this->getCollection()->getAll();
     }
 
-    public function exists($class, $name = null, $includeMiddleware = true)
+    public function exists($class, $name = null, $options = 0)
     {
-        $config = $this->get($class, null, $includeMiddleware);
-        if (!isset($config)) {
-            return false;
-        }
-        if ($name) {
-            return array_key_exists($name, $config);
-        }
-        return true;
+        return $this->getCollection()->exists($options, $name, $options);
     }
 
     public function getMetadata()
@@ -119,11 +83,11 @@ class CachedConfigCollection implements ConfigCollectionInterface
         }
 
         // Init cached item
-        $cacheItem = $this->pool->getItem(self::CACHE_KEY);
+        $collectionCacheItem = $this->pool->getItem(self::CACHE_KEY);
 
         // Load from cache (unless flushing)
-        if (!$this->flush && $cacheItem->isHit()) {
-            $this->collection = $cacheItem->get();
+        if (!$this->flush && $collectionCacheItem->isHit()) {
+            $this->collection = $collectionCacheItem->get();
             return $this->collection;
         }
 
@@ -132,11 +96,11 @@ class CachedConfigCollection implements ConfigCollectionInterface
 
         // Note: Config may be yet modified prior to deferred save, but after Core.php
         // however no formal api for this yet
-        $cacheItem->set($this->collection);
+        $collectionCacheItem->set($this->collection);
 
-        // Defer this save
-        $this->dirty = true;
-        $this->pool->saveDeferred($cacheItem);
+        // Save immediately.
+        // Note additional deferred save will occur in _destruct()
+        $this->pool->save($collectionCacheItem);
         return $this->collection;
     }
 
@@ -145,36 +109,17 @@ class CachedConfigCollection implements ConfigCollectionInterface
      */
     public function __destruct()
     {
-        if ($this->dirty) {
-            $this->pool->commit();
+        // Ensure back-end cache is updated
+        if ($this->collection) {
+            $cacheItem = $this->pool->getItem(self::CACHE_KEY);
+            $cacheItem->set($this->collection);
+            $this->pool->save($cacheItem);
         }
     }
 
     public function nest()
     {
-        // @todo - Inject nested collection creater
-
-        // Create locally-modifiable collection which points back to
-        // this self-reference.
-        // This allows un-modified clases to continue to benefit from
-        // any caches provided by CachedConfigCollection
-        return DeltaConfigCollection::create()
-            ->setParent($this)
-            ->setMiddlewares($this->nestedMiddlewares);
-    }
-
-    /**
-     * Set middlewares to apply to nested configs
-     *
-     * @todo - make redundant through having a nested creator factory apply this
-     *
-     * @param $middleares
-     * @return $this
-     */
-    public function setNestedMiddlewares($middleares)
-    {
-        $this->nestedMiddlewares = $middleares;
-        return $this;
+        return $this->getCollection()->nest();
     }
 
     /**
@@ -239,42 +184,10 @@ class CachedConfigCollection implements ConfigCollectionInterface
         return $this->flush;
     }
 
-    /**
-     * Get cache class config, or cache and return
-     *
-     * @param string $class
-     * @param bool $includeMiddleware
-     * @return mixed
-     */
-    public function getClassConfig($class, $includeMiddleware)
+    public function setMiddlewares($middlewares)
     {
-        $key = $class . '-' . $includeMiddleware;
-        if (array_key_exists($key, $this->cache)) {
-            return $this->cache[$key];
-        }
-
-        $result = $this->getUncachedClassConfig($class, $includeMiddleware);
-        $this->cache[$key] = $result;
-        return $result;
-    }
-
-    /**
-     * Get uncached class config
-     *
-     * @param string $class
-     * @param bool $includeMiddleware
-     * @return mixed
-     */
-    protected function getUncachedClassConfig($class, $includeMiddleware)
-    {
-        if (!$includeMiddleware) {
-            return $this->getCollection()->get($class, null, false);
-        }
-
-        // Apply local middleware against this request
-        $getConfig = function () use ($class) {
-            return $this->getCollection()->get($class, null, false);
-        };
-        return $this->callMiddleware($class, $getConfig);
+        throw new BadMethodCallException(
+            "Please apply middleware to collection factory via setCollectionCreator()"
+        );
     }
 }

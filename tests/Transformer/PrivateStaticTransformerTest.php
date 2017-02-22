@@ -1,5 +1,9 @@
 <?php
 
+namespace SilverStripe\Config\Tests\Transformer;
+
+use SilverStripe\Config\Tests\PrivateStaticTransformerTest\ClassA;
+use SilverStripe\Config\Tests\PrivateStaticTransformerTest\ClassB;
 use SilverStripe\Config\Transformer\PrivateStaticTransformer;
 use SilverStripe\Config\Collections\MemoryConfigCollection;
 use PHPUnit\Framework\TestCase;
@@ -12,11 +16,12 @@ class PrivateStaticTransformerTest extends TestCase
      */
     public function testLookup()
     {
-        $classes = [PrivateStaticTransformerTest_ClassA::class];
+        $classes = [
+            ClassA::class
+        ];
         $collection = new MemoryConfigCollection;
-        $transformer = new PrivateStaticTransformer($classes, $collection);
-
-        $transformer->transform();
+        $transformer = new PrivateStaticTransformer($classes);
+        $collection->transform([$transformer]);
 
         // Assert that the value matches
         $expected = [
@@ -26,9 +31,10 @@ class PrivateStaticTransformerTest extends TestCase
                 0 => 'myOtherThing',
             ],
         ];
+
         $this->assertEquals(
             $expected,
-            $collection->get(PrivateStaticTransformerTest_ClassA::class)
+            $collection->get(ClassA::class)
         );
     }
 
@@ -38,13 +44,13 @@ class PrivateStaticTransformerTest extends TestCase
     public function testMerge()
     {
         $classes = [
-            PrivateStaticTransformerTest_ClassA::class,
-            PrivateStaticTransformerTest_ClassB::class,
+            ClassA::class,
+            ClassB::class,
         ];
         $collection = new MemoryConfigCollection;
-        $transformer = new PrivateStaticTransformer($classes, $collection);
+        $transformer = new PrivateStaticTransformer($classes);
 
-        $transformer->transform();
+        $collection->transform([$transformer]);
 
         $expectedA = [
             'myString' => 'value',
@@ -62,8 +68,8 @@ class PrivateStaticTransformerTest extends TestCase
             ],
         ];
 
-        $classA = PrivateStaticTransformerTest_ClassA::class;
-        $classB = PrivateStaticTransformerTest_ClassB::class;
+        $classA = ClassA::class;
+        $classB = ClassB::class;
 
         $this->assertEquals($expectedA, $collection->get($classA));
         $this->assertEquals($expectedB, $collection->get($classB));
@@ -81,39 +87,8 @@ class PrivateStaticTransformerTest extends TestCase
 
         $collection = new MemoryConfigCollection;
         $transformer = new PrivateStaticTransformer([$class], $collection);
-        $transformer->transform();
+        $collection->transform([$transformer]);
         $this->assertFalse($collection->exists($class));
     }
 
-}
-
-class PrivateStaticTransformerTest_ClassA
-{
-    private static $myString = 'value';
-
-    private static $myArray = [
-        'myThing' => 'myValue',
-        'myOtherThing',
-    ];
-
-    public static $ignoredPublicStatic = 'ignored';
-
-    protected static $ignoredProtectedStatic = 'ignored';
-
-    private $ignoredPrivate = 'ignored';
-
-    protected $ignoredProtected = 'ignored';
-
-    public $ignoredPublic = 'ignored';
-}
-
-
-class PrivateStaticTransformerTest_ClassB
-{
-    private static $myString = 'my other string';
-
-    private static $myArray = [
-        'test1',
-        'test2'
-    ];
 }

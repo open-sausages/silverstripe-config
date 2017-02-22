@@ -1,5 +1,8 @@
 <?php
 
+namespace SilverStripe\Config\Tests\Transformer;
+
+use org\bovigo\vfs\vfsStreamDirectory;
 use SilverStripe\Config\Transformer\YamlTransformer;
 use SilverStripe\Config\Collections\MemoryConfigCollection;
 use PHPUnit\Framework\TestCase;
@@ -19,7 +22,7 @@ class YamlTransformerTest extends TestCase
     /**
      * Root directory for virtual filesystem
      *
-     * @var string
+     * @var vfsStreamDirectory
      */
     protected $root;
 
@@ -82,7 +85,7 @@ class YamlTransformerTest extends TestCase
             $this->getFinder(),
             $collection
         );
-        $transformer->transform();
+        $collection->transform([$transformer]);
     }
 
     /**
@@ -113,12 +116,8 @@ YAML;
             $this->getFinder(),
             $collection
         );
-        $transformer->transform();
+        $collection->transform([$transformer]);
 
-        $expected = [
-            'first' => 'firstValue',
-            'third' => 'thirdValue',
-        ];
         $this->assertEquals('firstValue', $collection->get('first'));
         $this->assertEquals('thirdValue', $collection->get('third'));
     }
@@ -148,7 +147,7 @@ YAML;
             $this->getFinder(),
             $collection
         );
-        $transformer->transform();
+        $collection->transform([$transformer]);
 
         $expected = [
             'test' => 'test',
@@ -184,7 +183,7 @@ YAML;
             $this->getFinder(),
             $collection
         );
-        $transformer->transform();
+        $collection->transform([$transformer]);
 
         $this->assertEquals('blah', $collection->get('Test'));
     }
@@ -227,7 +226,7 @@ YAML;
             $this->getFinder(),
             $collection
         );
-        $transformer->transform();
+        $collection->transform([$transformer]);
 
         $this->assertEquals('overwritten', $collection->get('test'));
     }
@@ -258,7 +257,7 @@ YAML;
             $this->getFinder(),
             $collection
         );
-        $transformer->transform();
+        $collection->transform([$transformer]);
 
         $this->assertEquals('actualvalue', $collection->get('test'));
     }
@@ -293,7 +292,7 @@ YAML;
             $this->getFinder(),
             $collection
         );
-        $transformer->transform();
+        $collection->transform([$transformer]);
 
         $this->assertEquals('test', $collection->get('test'));
 
@@ -312,7 +311,7 @@ YAML;
             $this->getFinder(),
             $collection
         );
-        $transformer->transform();
+        $collection->transform([$transformer]);
 
         $this->assertEquals('overwrite', $collection->get('test'));
     }
@@ -347,7 +346,7 @@ YAML;
         );
 
         $this->expectException(CircularDependencyException::class);
-        $transformer->transform();
+        $collection->transform([$transformer]);
     }
 
     /**
@@ -390,7 +389,7 @@ YAML;
                 return true;
             }
         );
-        $yaml->transform();
+        $collection->transform([$yaml]);
 
         $this->assertEquals('overwritten', $collection->get('test'));
     }
@@ -442,7 +441,7 @@ YAML;
                 return true;
             }
         );
-        $yaml->transform();
+        $collection->transform([$yaml]);
 
         $this->assertEquals('overwritten', $collection->get('test'));
     }
@@ -500,7 +499,7 @@ YAML;
                 return true;
             }
         );
-        $yaml->transform();
+        $collection->transform([$yaml]);
 
         $this->assertEquals('overwritten', $collection->get('test'));
         $this->assertEquals('test2', $collection->get('test2'));
@@ -535,7 +534,7 @@ YAML;
             }
         );
         $yaml->ignoreRule('testcase');
-        $yaml->transform();
+        $collection->transform([$yaml]);
 
         $this->assertEquals('test1', $collection->get('test1'));
         $this->assertEquals('test2', $collection->get('test2'));
@@ -593,7 +592,7 @@ YAML;
                 return ($testData[$key] === $value);
             }
         );
-        $merged = $yaml->transform();
+        $collection->transform([$yaml]);
 
         $this->assertEquals('value', $collection->get('key'));
         $this->assertEquals('passed', $collection->get('arrays'));

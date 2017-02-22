@@ -18,7 +18,8 @@
   },
   "autoload": {
     "psr-4": {
-      "SilverStripe\\Config\\": "src/"
+      "SilverStripe\\Config\\": "src/",
+      "SilverStripe\\Config\\Tests\\": "tests/"
     }
   }
 }

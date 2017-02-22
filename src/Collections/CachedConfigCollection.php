@@ -57,7 +57,7 @@ class CachedConfigCollection implements ConfigCollectionInterface
 
     public function exists($class, $name = null, $options = 0)
     {
-        return $this->getCollection()->exists($options, $name, $options);
+        return $this->getCollection()->exists($class, $name, $options);
     }
 
     public function getMetadata()
@@ -114,6 +114,9 @@ class CachedConfigCollection implements ConfigCollectionInterface
             $cacheItem = $this->pool->getItem(self::CACHE_KEY);
             $cacheItem->set($this->collection);
             $this->pool->save($cacheItem);
+
+            // Prevent double-destruct
+            $this->collection = null;
         }
     }
 

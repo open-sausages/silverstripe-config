@@ -1,8 +1,8 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use micmania1\config\MergeStrategy\Priority;
-use micmania1\config\Collections\MemoryConfigCollection;
+use SilverStripe\Config\MergeStrategy\Priority;
+use SilverStripe\Config\Collections\MemoryConfigCollection;
 use Prophecy\Prophet;
 use Prophecy\Argument;
 

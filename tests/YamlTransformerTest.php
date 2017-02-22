@@ -1,7 +1,7 @@
 <?php
 
-use micmania1\config\Transformer\YamlTransformer;
-use micmania1\config\Collections\MemoryConfigCollection;
+use SilverStripe\Config\Transformer\YamlTransformer;
+use SilverStripe\Config\Collections\MemoryConfigCollection;
 use PHPUnit\Framework\TestCase;
 use org\bovigo\vfs\vfsStream;
 use Symfony\Component\Finder\Finder;
@@ -385,9 +385,11 @@ YAML;
             $this->getFinder(),
             $collection
         );
-        $yaml->addRule('testcase', function() {
-            return true;
-        });
+        $yaml->addRule(
+            'testcase', function () {
+                return true;
+            }
+        );
         $yaml->transform();
 
         $this->assertEquals('overwritten', $collection->get('test'));
@@ -430,12 +432,16 @@ YAML;
             $this->getFinder(),
             $collection
         );
-        $yaml->addRule('testcase1', function() {
-            return true;
-        });
-        $yaml->addRule('testcase2', function() {
-            return true;
-        });
+        $yaml->addRule(
+            'testcase1', function () {
+                return true;
+            }
+        );
+        $yaml->addRule(
+            'testcase2', function () {
+                return true;
+            }
+        );
         $yaml->transform();
 
         $this->assertEquals('overwritten', $collection->get('test'));
@@ -484,12 +490,16 @@ YAML;
             $this->getFinder(),
             $collection
         );
-        $yaml->addRule('testcase1', function() {
-            return false;
-        });
-        $yaml->addRule('testcase2', function() {
-            return true;
-        });
+        $yaml->addRule(
+            'testcase1', function () {
+                return false;
+            }
+        );
+        $yaml->addRule(
+            'testcase2', function () {
+                return true;
+            }
+        );
         $yaml->transform();
 
         $this->assertEquals('overwritten', $collection->get('test'));
@@ -519,9 +529,11 @@ YAML;
             $this->getFinder(),
             $collection
         );
-        $yaml->addRule('testcase', function() {
-            return false;
-        });
+        $yaml->addRule(
+            'testcase', function () {
+                return false;
+            }
+        );
         $yaml->ignoreRule('testcase');
         $yaml->transform();
 
@@ -576,9 +588,11 @@ YAML;
             'otherkey' => 'othervalue',
             'arraykey' => ['test' => 'test'],
         ];
-        $yaml->addRule('testcase', function($key, $value) use($testData) {
-            return ($testData[$key] === $value);
-        });
+        $yaml->addRule(
+            'testcase', function ($key, $value) use ($testData) {
+                return ($testData[$key] === $value);
+            }
+        );
         $merged = $yaml->transform();
 
         $this->assertEquals('value', $collection->get('key'));

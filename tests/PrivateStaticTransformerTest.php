@@ -1,7 +1,7 @@
 <?php
 
-use micmania1\config\Transformer\PrivateStaticTransformer;
-use micmania1\config\Collections\MemoryConfigCollection;
+use SilverStripe\Config\Transformer\PrivateStaticTransformer;
+use SilverStripe\Config\Collections\MemoryConfigCollection;
 use PHPUnit\Framework\TestCase;
 
 class PrivateStaticTransformerTest extends TestCase

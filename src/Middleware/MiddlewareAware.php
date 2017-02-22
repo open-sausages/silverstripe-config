@@ -1,6 +1,6 @@
 <?php
 
-namespace micmania1\config\Middleware;
+namespace SilverStripe\Config\Middleware;
 
 trait MiddlewareAware
 {
@@ -40,9 +40,9 @@ trait MiddlewareAware
     /**
      * Call middleware to get decorated class config
      *
-     * @param string $class Class name to pass
-     * @param mixed $options
-     * @param callable $last Last config to call
+     * @param  string   $class   Class name to pass
+     * @param  mixed    $options
+     * @param  callable $last    Last config to call
      * @return array Class config with middleware applied
      */
     protected function callMiddleware($class, $options, $last)

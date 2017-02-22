@@ -1,8 +1,8 @@
 <?php
 
-namespace micmania1\config\Transformer;
+namespace SilverStripe\Config\Transformer;
 
-use micmania1\config\Collections\MutableConfigCollectionInterface;
+use SilverStripe\Config\Collections\MutableConfigCollectionInterface;
 use ReflectionClass;
 use ReflectionProperty;
 
@@ -57,7 +57,7 @@ class PrivateStaticTransformer implements TransformerInterface
      * This is responsible for introspecting a given class and returning an
      * array continaing all of its private statics
      *
-     * @param string $class
+     * @param  string $class
      * @return mixed
      */
     protected function getClassConfig($class)

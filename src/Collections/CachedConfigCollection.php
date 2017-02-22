@@ -1,9 +1,9 @@
 <?php
 
-namespace micmania1\config\Collections;
+namespace SilverStripe\Config\Collections;
 
 use BadMethodCallException;
-use micmania1\config\Middleware\MiddlewareAware;
+use SilverStripe\Config\Middleware\MiddlewareAware;
 use Psr\Cache\CacheItemPoolInterface;
 
 class CachedConfigCollection implements ConfigCollectionInterface
@@ -125,7 +125,7 @@ class CachedConfigCollection implements ConfigCollectionInterface
     /**
      * Set a pool
      *
-     * @param CacheItemPoolInterface $pool
+     * @param  CacheItemPoolInterface $pool
      * @return $this
      */
     public function setPool(CacheItemPoolInterface $pool)

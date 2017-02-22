@@ -1,8 +1,8 @@
 <?php
 
-namespace micmania1\config\Collections;
+namespace SilverStripe\Config\Collections;
 
-use micmania1\config\Middleware\Middleware;
+use SilverStripe\Config\Middleware\Middleware;
 
 /**
  * This represents a colletction of config keys and values.
@@ -13,10 +13,10 @@ interface ConfigCollectionInterface
      * Fetches value for a class, or a field on that class
      *
      * @param string $class
-     * @param string $name Optional sub-key to get
-     * @param mixed $options Optional flag of middleware to disable. Passing in `true` disables
-     * all middleware. Can also pass in int flags, or array with `disableFlag` key with
-     * middlewares to disable
+     * @param string $name    Optional sub-key to get
+     * @param mixed  $options Optional flag of middleware to disable. Passing in `true` disables
+     *                        all middleware. Can also pass in int flags, or array with
+     *                        `disableFlag` key with middlewares to disable
      *
      * @return mixed
      */
@@ -25,9 +25,9 @@ interface ConfigCollectionInterface
     /**
      * Checks to see if a config item exists, or a field on that class
      *
-     * @param string $class
-     * @param string $name
-     * @param array|int|bool $options Optional flag of middleware to disable. Passing in `true` disables
+     * @param  string         $class
+     * @param  string         $name
+     * @param  array|int|bool $options Optional flag of middleware to disable. Passing in `true` disables
      * all middleware. Can also pass in int flags, or array with `disableFlag` key with
      * middlewares to disable
      * @return bool

@@ -1,6 +1,6 @@
 <?php
 
-use micmania1\config\Collections\MemoryConfigCollection;
+use SilverStripe\Config\Collections\MemoryConfigCollection;
 use PHPUnit\Framework\TestCase;
 
 class ConfigCollectionTest extends TestCase

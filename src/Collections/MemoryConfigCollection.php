@@ -1,10 +1,10 @@
 <?php
 
-namespace micmania1\config\Collections;
+namespace SilverStripe\Config\Collections;
 
-use micmania1\config\MergeStrategy\Priority;
-use micmania1\config\Middleware\MiddlewareAware;
-use micmania1\config\Transformer\TransformerInterface;
+use SilverStripe\Config\MergeStrategy\Priority;
+use SilverStripe\Config\Middleware\MiddlewareAware;
+use SilverStripe\Config\Transformer\TransformerInterface;
 use Serializable;
 
 /**
@@ -64,7 +64,7 @@ class MemoryConfigCollection implements MutableConfigCollectionInterface, Serial
     /**
      * Trigger transformers to load into this store
      *
-     * @param TransformerInterface[] $transformers
+     * @param  TransformerInterface[] $transformers
      * @return $this
      */
     public function transform($transformers)
@@ -118,7 +118,7 @@ class MemoryConfigCollection implements MutableConfigCollectionInterface, Serial
 
     /**
      * @param string $class
-     * @param mixed $options
+     * @param mixed  $options
      * @return array|null
      */
     protected function getClassConfig($class, $options)
@@ -142,10 +142,12 @@ class MemoryConfigCollection implements MutableConfigCollectionInterface, Serial
         }
 
         // Build middleware
-        $result = $this->callMiddleware($class, $options, function ($class, $options) {
-            $class = strtolower($class);
-            return isset($this->config[$class]) ? $this->config[$class] : [];
-        });
+        $result = $this->callMiddleware(
+            $class, $options, function ($class, $options) {
+                $class = strtolower($class);
+                return isset($this->config[$class]) ? $this->config[$class] : [];
+            }
+        );
 
         // Save cache
         if (!isset($this->callCache[$class])) {
@@ -205,7 +207,7 @@ class MemoryConfigCollection implements MutableConfigCollectionInterface, Serial
      *
      * @param string $class
      * @param string $name
-     * @param mixed $value
+     * @param mixed  $value
      * @return $this
      */
     public function update($class, $name, $value)
@@ -247,13 +249,15 @@ class MemoryConfigCollection implements MutableConfigCollectionInterface, Serial
 
     public function serialize()
     {
-        return serialize([
+        return serialize(
+            [
             $this->config,
             $this->history,
             $this->metadata,
             $this->trackMetadata,
             $this->middlewares,
-        ]);
+            ]
+        );
     }
 
     public function unserialize($serialized)
@@ -276,7 +280,7 @@ class MemoryConfigCollection implements MutableConfigCollectionInterface, Serial
      * Save metadata for the given class
      *
      * @param string $class
-     * @param array $metadata
+     * @param array  $metadata
      */
     protected function saveMetadata($class, $metadata)
     {
@@ -289,10 +293,12 @@ class MemoryConfigCollection implements MutableConfigCollectionInterface, Serial
                 $this->history[$class] = [];
             }
 
-            array_unshift($this->history[$class], [
+            array_unshift(
+                $this->history[$class], [
                 'value' => $this->config[$class],
                 'metadata' => $this->metadata[$class]
-            ]);
+                ]
+            );
         }
 
         $this->metadata[$class] = $metadata;

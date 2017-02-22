@@ -1,8 +1,8 @@
 <?php
 
-namespace micmania1\config\Transformer;
+namespace SilverStripe\Config\Transformer;
 
-use micmania1\config\Collections\MutableConfigCollectionInterface;
+use SilverStripe\Config\Collections\MutableConfigCollectionInterface;
 
 interface TransformerInterface
 {
@@ -11,8 +11,8 @@ interface TransformerInterface
      * that Config can understand. Config will then be responsible for turning thie
      * output into the final merged config.
      *
-     * @param MutableConfigCollectionInterface $collection
-     * @return \micmania1\config\Collections\MutableConfigCollectionInterface
+     * @param  MutableConfigCollectionInterface $collection
+     * @return MutableConfigCollectionInterface
      */
     public function transform(MutableConfigCollectionInterface $collection);
 }

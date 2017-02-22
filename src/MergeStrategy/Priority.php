@@ -1,8 +1,8 @@
 <?php
 
-namespace micmania1\config\MergeStrategy;
+namespace SilverStripe\Config\MergeStrategy;
 
-use micmania1\config\Collections\MutableConfigCollectionInterface;
+use SilverStripe\Config\Collections\MutableConfigCollectionInterface;
 
 class Priority
 {

@@ -1,7 +1,7 @@
 <?php
 
-use micmania1\config\Collections\CachedConfigCollection;
-use micmania1\config\Collections\MemoryConfigCollection;
+use SilverStripe\Config\Collections\CachedConfigCollection;
+use SilverStripe\Config\Collections\MemoryConfigCollection;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Prophet;
 use Psr\Cache\CacheItemPoolInterface;

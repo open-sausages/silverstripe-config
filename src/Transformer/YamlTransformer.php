@@ -1,9 +1,9 @@
 <?php
 
-namespace micmania1\config\Transformer;
+namespace SilverStripe\Config\Transformer;
 
-use micmania1\config\MergeStrategy\Priority;
-use micmania1\config\Collections\MutableConfigCollectionInterface;
+use SilverStripe\Config\MergeStrategy\Priority;
+use SilverStripe\Config\Collections\MutableConfigCollectionInterface;
 use Symfony\Component\Yaml\Yaml as YamlParser;
 use Symfony\Component\Finder\Finder;
 use MJS\TopSort\Implementations\ArraySort;
@@ -95,7 +95,7 @@ class YamlTransformer implements TransformerInterface
      * that Config can understand. Config will then be responsible for turning thie
      * output into the final merged config.
      *
-     * @param \micmania1\config\Collections\MutableConfigCollectionInterface $collection
+     * @param  MutableConfigCollectionInterface $collection
      * @return MutableConfigCollectionInterface
      */
     public function transform(MutableConfigCollectionInterface $collection)
@@ -134,8 +134,8 @@ class YamlTransformer implements TransformerInterface
      * remove rules after being set. This also prevent built-in rules from being
      * removed.
      *
-     * @param string $rule
-     * @param Closure $func
+     * @param  string  $rule
+     * @param  Closure $func
      * @return $this
      */
     public function addRule($rule, Closure $func)
@@ -188,6 +188,7 @@ class YamlTransformer implements TransformerInterface
 
     /**
      * Returns an array of YAML documents keyed by name.
+     *
      * @return array
      * @throws Exception
      */
@@ -328,10 +329,10 @@ class YamlTransformer implements TransformerInterface
     /**
      * Incapsulates the logic for adding before/after dependencies.
      *
-     * @param array        $header
-     * @param string       $flag
-     * @param array        $dependencies
-     * @param array        $documents
+     * @param array  $header
+     * @param string $flag
+     * @param array  $dependencies
+     * @param array  $documents
      *
      * @return array
      */
@@ -375,9 +376,9 @@ class YamlTransformer implements TransformerInterface
      * This returns an array of documents which match the given pattern. The pattern is
      * expected to come from before/after blocks of yaml (eg. framwork/*).
      *
-     * @param string $pattern
-     * @param array $documents
-     * @param string $flag 'before' / 'after'
+     * @param  string $pattern
+     * @param  array  $documents
+     * @param  string $flag      'before' / 'after'
      * @return array
      */
     protected function getMatchingDocuments($pattern, $documents, $flag)
@@ -401,16 +402,19 @@ class YamlTransformer implements TransformerInterface
         // After="*" docs are after all documents except OTHER After="*",
         // and likewise for Before="*"
         if ($pattern === '*') {
-            return array_filter($documents, function ($document) use ($flag) {
-                if (empty($document['header'][$flag])) {
-                    return true;
+            return array_filter(
+                $documents,
+                function ($document) use ($flag) {
+                    if (empty($document['header'][$flag])) {
+                        return true;
+                    }
+                    $otherPatterns = $document['header'][$flag];
+                    if (is_array($otherPatterns)) {
+                        return !in_array('*', $otherPatterns);
+                    }
+                    return $otherPatterns !== '*';
                 }
-                $otherPatterns = $document['header'][$flag];
-                if (is_array($otherPatterns)) {
-                    return !in_array('*', $otherPatterns);
-                }
-                return $otherPatterns !== '*';
-            });
+            );
         }
 
         // Do pattern matching on file names. This requires us to loop through each document
@@ -520,8 +524,8 @@ class YamlTransformer implements TransformerInterface
     /**
      * Tests the only except rules for a header.
      *
-     * @param array $header
-     * @param string $flag
+     * @param  array  $header
+     * @param  string $flag
      * @return bool
      * @throws Exception
      */
@@ -554,8 +558,8 @@ class YamlTransformer implements TransformerInterface
     /**
      * Tests a rule against the given expected result.
      *
-     * @param string $rule
-     * @param string|array $params
+     * @param  string       $rule
+     * @param  string|array $params
      * @return bool
      * @throws Exception
      */
